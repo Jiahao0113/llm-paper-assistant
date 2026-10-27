@@ -1,4 +1,4 @@
-# Research Copilot
+# LLM Paper Assistant
 
 A RAG → Agentic RAG assistant that answers questions about LLM papers/docs, with citations and a measured evaluation harness.
 
