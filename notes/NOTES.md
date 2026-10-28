@@ -94,3 +94,27 @@ Code: `step0_llm_basics/tokenizer_demo.py`
 - For RAG, prefer T=0 (or near 0) and no top-p: answers should be grounded in retrieved text, reproducible and easy to evaluate.
 
 Code: `step0_llm_basics/gpt2_sampling.py`
+
+---
+
+## 3. Using an LLM API (Step 1)
+
+### Messages and system prompt
+- Roles: `user`, `assistant`; the `system` prompt is a separate parameter in the Claude API.
+- The API is **stateless**: the model remembers nothing between requests. The application resends the whole history each time, so cost and context usage grow with conversation length (per-request cost ~linear, cumulative cost ~quadratic).
+- A system prompt sets role, rules and output format. For RAG it will say "answer only from the provided documents and cite sources" to reduce **hallucination**.
+- A response `content` is a **list of blocks** (`text`, `thinking`, later `tool_use`). Always filter by `block.type`; never assume `content[0].text`.
+
+### Zero-shot vs few-shot (in-context learning)
+- Few-shot = put input/output examples in the prompt (as earlier user/assistant turns). No weights change, only the input does.
+- Why it works: the model computes P(next token | context), so a different context gives a different distribution; pretraining on repetitive text taught it to continue patterns (induction heads are one known mechanism).
+- It shifts probabilities, it does not guarantee anything. Main value: stabilizing the output format.
+- Few-shot vs fine-tuning: prompt changes are fast, cheap and temporary; fine-tuning changes weights, costs training, is permanent. Try prompting first.
+
+### Structured output
+- Pass a JSON schema; the API guarantees the output matches it (**constrained decoding**: tokens that would violate the schema get probability 0).
+- Prompt-only JSON failed in two ways: (1) markdown code fence around the JSON -> `json.loads` raises (loud failure); (2) the model invented a category value outside the allowed set -> later `if category == ...` silently never matches (silent failure, worse).
+- Pydantic `BaseModel`: define the shape once; `model_json_schema()` produces the schema, `model_validate_json()` parses and validates. `Literal[...]` becomes an enum. `extra="forbid"` is needed because the API requires `additionalProperties: false`.
+- A schema guarantees **format**, not **correctness**. Correctness is measured by evaluation (Step 4).
+
+Code: `step1_prompting/` (`messages_demo.py`, `few_shot_demo.py`, `structured_output_demo.py`)
