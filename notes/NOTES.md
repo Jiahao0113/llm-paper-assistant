@@ -118,3 +118,14 @@ Code: `step0_llm_basics/gpt2_sampling.py`
 - A schema guarantees **format**, not **correctness**. Correctness is measured by evaluation (Step 4).
 
 Code: `step1_prompting/` (`messages_demo.py`, `few_shot_demo.py`, `structured_output_demo.py`)
+
+### Tool use (function calling)
+Flow: question + tool list -> model replies `stop_reason="tool_use"` with `tool_use` blocks (name + arguments) -> **our code** runs the function -> we send back a `tool_result` block (matched by `tool_use_id`) inside a user message -> model continues -> `stop_reason="end_turn"` means the final answer.
+- The model never executes anything; it only emits a structured request. We control what tools can do (security is our responsibility).
+- Tool `name`, `description` and `input_schema` (JSON schema) are effectively prompt text; bad descriptions lead to wrong or missing tool use.
+- The full history (assistant tool_use + user tool_result) must be resent each turn (stateless API).
+- The model may issue **parallel tool calls** (e.g. search "QLoRA" and "LoRA" in one turn).
+- `while stop_reason == "tool_use"` is the skeleton of an **agent loop**. Real agents also need a max-iteration cap (avoid infinite loops and runaway cost) and error handling for failed tools.
+- **Grounding problem**: with retrieved text the model still mixed in facts from its own memory (e.g. "roughly 4x", "16-bit") that were not in the results. It cannot tell retrieved facts from remembered ones, so unsupported claims may slip in with no citation. Mitigations: system prompt rules ("answer only from the documents, cite each claim") and measuring **faithfulness** in evaluation (Step 4).
+
+Code: `step1_prompting/tool_use_demo.py`

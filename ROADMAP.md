@@ -3,7 +3,7 @@
 | Step | Topic | Deliverable | Done |
 |---|---|---|---|
 | 0 | LLM basics: tokenizer, sampling, API | `step0_llm_basics/` | [x] |
-| 1 | Prompting, structured output, function calling | v0 baseline | [ ] |
+| 1 | Prompting, structured output, function calling | `step1_prompting/` | [x] |
 | 2 | Embeddings + vector search (from scratch, then Chroma) | `src/copilot/retrieval.py` | [ ] |
 | 3 | Full RAG with citations | v1 | [ ] |
 | 4 | Evaluation: test set, recall@k, faithfulness | `eval/` + baseline numbers | [ ] |
