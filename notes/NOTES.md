@@ -84,3 +84,13 @@ Code: `step0_llm_basics/tokenizer_demo.py`
 - The set size is **adaptive per step**: model confident => few tokens kept; model unsure => many. The user sets p once.
 - Top-k keeps a fixed k tokens regardless of the distribution, so it is less flexible.
 - Temperature changes the **shape**; top-p/top-k cut the **tail**. Usually tune only one of them.
+
+### Entropy and the shape of the distribution
+- **Entropy** measures how uncertain the model is at a step. Low entropy = sharp distribution (e.g. after "The capital of France is", " Paris" gets most of the mass). High entropy = flat distribution (e.g. after "The cat sat on the", many valid continuations).
+- Observed with GPT-2: at T=1.0 the top token " floor" has only p=0.076, so random sampling is naturally diverse here.
+- The probability is conditional on the context, NOT the word's overall frequency in the corpus.
+- top-p=0.9 keeps 728 of 50257 tokens: the long tail is very long, but most of those tokens carry almost no probability.
+- Provider note: newer Claude models no longer expose `temperature`/`top_p` in the Messages API (anthropic SDK 2.3.0), so control output via prompting. Always check the provider docs.
+- For RAG, prefer T=0 (or near 0) and no top-p: answers should be grounded in retrieved text, reproducible and easy to evaluate.
+
+Code: `step0_llm_basics/gpt2_sampling.py`
