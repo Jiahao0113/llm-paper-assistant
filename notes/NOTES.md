@@ -52,3 +52,35 @@ Split into base symbols, then apply merge rules **in training order**.
 3. **Vocab shrinks 100k -> 1k, what happens to sequence length?** It gets longer. Fewer merges means each token covers less text, so the same sentence needs more tokens (in the extreme, one token per byte). Longer sequences cost more compute (attention is O(n^2)) and fill the context window faster.
 
 Code: `step0_llm_basics/tokenizer_demo.py`
+
+---
+
+## 2. How an LLM generates text: sampling
+
+### What the model outputs
+- Each step the model outputs **logits** (one raw score per vocab token), then **softmax** turns them into a **probability distribution** over the whole vocab.
+- So an LLM is a ~100k-class classifier run once per step. Training loss = cross-entropy, same as ordinary classification.
+- The token is **chosen from** the distribution by a sampling rule: `model -> distribution -> (sampling) -> token`.
+- **Autoregressive generation**: append the chosen token to the input, predict again, repeat until the end-of-sequence token.
+
+### Decoding strategies
+| Method | Rule | Pros / cons |
+|---|---|---|
+| Greedy | always take the highest-probability token | deterministic, but dull/repetitive; locally best != globally best |
+| Random sampling | draw from the distribution | diverse, but the long tail (many tiny probabilities summing to a lot) occasionally yields nonsense |
+
+### Temperature (T)
+`probability = softmax(logits / T)`
+- T < 1: sharper distribution, more conservative (exploitation).
+- T = 1: original distribution.
+- T > 1: flatter distribution, more diverse but riskier (exploration).
+- T = 0 is equivalent to greedy (implemented as argmax). Same input + same weights => usually same output. "Not always" because GPU floating-point ordering can flip near-tied tokens.
+- Analogy: simulated annealing temperature (but LLM T is usually fixed during a generation).
+- Use low T (0 to 0.3) for extraction, code, factual QA, RAG; higher T (0.7 to 1.0) for creative writing.
+
+### Top-p (nucleus sampling) and top-k
+- Top-p: sort tokens by probability, keep the smallest set whose cumulative probability >= p, drop the rest, renormalize, then sample.
+- p = 1.0 means no filtering. Very small p keeps only a few tokens (if the top token already has probability >= p, only that one).
+- The set size is **adaptive per step**: model confident => few tokens kept; model unsure => many. The user sets p once.
+- Top-k keeps a fixed k tokens regardless of the distribution, so it is less flexible.
+- Temperature changes the **shape**; top-p/top-k cut the **tail**. Usually tune only one of them.
