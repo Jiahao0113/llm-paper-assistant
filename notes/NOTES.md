@@ -129,3 +129,25 @@ Flow: question + tool list -> model replies `stop_reason="tool_use"` with `tool_
 - **Grounding problem**: with retrieved text the model still mixed in facts from its own memory (e.g. "roughly 4x", "16-bit") that were not in the results. It cannot tell retrieved facts from remembered ones, so unsupported claims may slip in with no citation. Mitigations: system prompt rules ("answer only from the documents, cite each claim") and measuring **faithfulness** in evaluation (Step 4).
 
 Code: `step1_prompting/tool_use_demo.py`
+
+---
+
+## 4. Embeddings and vector search (Step 2)
+
+### Embedding
+- An **embedding** maps a piece of text to a fixed-length vector (384 dims for all-MiniLM-L6-v2) so that texts with similar meaning have nearby vectors. Sentence models pool token vectors (e.g. mean pooling) into one vector.
+- Trained with **contrastive learning**: pull related pairs (question/answer) together, push unrelated ones apart (cross-entropy over "which candidate is the correct pair").
+- Idea behind it: a word's meaning is determined by the contexts it appears in, so `memory` and `RAM` land close together. Keyword matching compares strings and cannot see this.
+- **Cosine similarity** = a.b / (|a||b|), range -1..1. With vectors normalized to length 1, cosine == dot product.
+
+### Brute-force vector search (`step2_retrieval/mini_retriever.py`)
+- Store chunk vectors in a matrix `(num_chunks, dim)`. For a query vector q (dim,), `matrix @ q` gives all similarities at once, shape `(num_chunks,)`. `argsort` then picks the top-k.
+- Complexity O(N*d) per query. Fine up to ~100k chunks. At 100M chunks x 384 float32 it is ~150 GB of memory plus slow scans, so vector databases use **ANN** (approximate nearest neighbor) indexes such as HNSW, trading a little recall for large speedups.
+
+### Limits seen in experiments (why RAG needs more than embeddings)
+- A small model ranked an unrelated sentence containing the word "memory" above a truly relevant one; "Dropout" ranked 2nd for a fine-tuning memory question.
+- Scores are not comparable across queries (best score 0.28 for one query, 0.50 for another), so a fixed relevance threshold is unreliable.
+- Remedies planned: hybrid search (BM25 + dense), reranker (Step 5), and measuring retrieval quality with evaluation (Step 4).
+- RAG is garbage-in/garbage-out: bad retrieval makes a good generator answer wrongly, so retrieval and generation are evaluated separately.
+
+Code: `step2_retrieval/embedding_demo.py`, `step2_retrieval/mini_retriever.py`
