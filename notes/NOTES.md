@@ -151,3 +151,28 @@ Code: `step1_prompting/tool_use_demo.py`
 - RAG is garbage-in/garbage-out: bad retrieval makes a good generator answer wrongly, so retrieval and generation are evaluated separately.
 
 Code: `step2_retrieval/embedding_demo.py`, `step2_retrieval/mini_retriever.py`
+
+---
+
+## 5. Chunking and ingestion (Step 2, continued)
+
+### Why chunk
+- One vector cannot represent a whole paper (averaging blurs meaning), embedding models truncate long input (~256 tokens for MiniLM), and stuffing whole papers into the prompt is costly and distracts the LLM.
+- Too small: not enough context (e.g. "therefore we default to rank 8" without the antecedent), many chunks. Too large: vague embedding, wasted prompt tokens. Typical start: 200-500 tokens; tune with evaluation.
+
+### Techniques
+- **Structure-aware chunking**: split along sections/paragraphs, with min/max size (merge tiny paragraphs, split huge ones); recursive splitting tries separators in order (heading, blank line, newline, sentence, space).
+- **Overlap** (10-20%): a sentence at a boundary appears in both neighbors so neither chunk loses its context.
+- **Metadata** per chunk (paper, section, page) enables citations; prepending the section title to the text before embedding adds context.
+- **Small-to-big**: retrieve small chunks, give the LLM the larger surrounding context (to be covered later).
+
+### Parsing real PDFs is messy (`src/copilot/ingest.py`)
+- Tables extract as a column of numbers, ligatures (`ﬁ`) and line-break hyphens break words, formulas are flattened, headers/footers/page numbers mix into the text, some fonts decode to garbage (ReAct paper).
+- Baseline cleaning: NFKC normalization, de-hyphenation, drop repeated headers and bare page numbers, drop table residue, cut at References.
+- Principle: build a baseline, then let **measurement** decide what to improve (avoid premature optimization). Always inspect the actual output of a pipeline.
+- Prioritize defects by downstream impact: (1) **information loss** (e.g. appendices dropped) cannot be repaired later; (2) **noise** (garbled or boilerplate chunks) can partly be fixed by reranking/filtering; (3) **wrong metadata** only affects citation display.
+- Known issues (v1): garbled text in ReAct figures, fake "sections" from table numbers, wrong title for the Attention paper, appendices after References dropped, paragraphs longer than 300 tokens are not split, tables/formulas not handled.
+
+### First retrieval results (`src/copilot/retrieval.py`, 5 papers -> 231 chunks)
+- Good on definitional questions (multi-head attention, RAG, optimal LoRA rank).
+- Failure: "What is the ReAct prompting format?" ranked a "Reproducibility statement" chunk first. Eyeballing 5 queries does not scale, which motivates a labeled test set and recall@k (Step 4).

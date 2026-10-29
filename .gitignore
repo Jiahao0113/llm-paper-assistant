@@ -5,3 +5,4 @@ data/raw/
 *.pt
 .DS_Store
 chroma_db/
+data/index/
