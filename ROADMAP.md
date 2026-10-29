@@ -4,9 +4,9 @@
 |---|---|---|---|
 | 0 | LLM basics: tokenizer, sampling, API | `step0_llm_basics/` | [x] |
 | 1 | Prompting, structured output, function calling | `step1_prompting/` | [x] |
-| 2 | Embeddings + vector search (from scratch, then Chroma) | `src/copilot/retrieval.py` | [ ] |
-| 3 | Full RAG with citations | v1 | [ ] |
-| 4 | Evaluation: test set, recall@k, faithfulness | `eval/` + baseline numbers | [ ] |
+| 2 | Embeddings + vector search, chunking | `src/copilot/ingest.py`, `retrieval.py` | [x] |
+| 3 | Full RAG with citations | `src/copilot/rag.py` (v1) | [x] |
+| 4 | Evaluation: test set, recall@k, faithfulness | `eval/` (retrieval baseline done; generation eval TODO) | [~] |
 | 5 | Hybrid (BM25 + dense), reranker, query rewriting | v2 + metric table | [ ] |
 | 6 | Agent: hand-written ReAct loop, tool use | v3 | [ ] |
 | 7 | Agentic RAG, MCP, tracing | v3+ | [ ] |
