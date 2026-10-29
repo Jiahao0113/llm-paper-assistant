@@ -41,6 +41,11 @@ def is_heading(text: str) -> bool:
     return short and (numbered or shouty)
 
 
+def is_appendix_heading(text: str) -> bool:
+    """e.g. "A ADDITIONAL RESULTS", "B.1 Prompts", "Appendix C". Used to resume after the reference list."""
+    return len(text) < 80 and re.match(r"^(appendix\b|[A-Z](\.\d+)*\s+[A-Z])", text, re.I if text.lower().startswith("appendix") else 0) is not None
+
+
 def is_table_residue(raw: str) -> bool:
     """Tables extract as many very short lines (numbers, labels). Prose has long lines."""
     lines = [l for l in raw.split("\n") if l.strip()]
@@ -74,6 +79,7 @@ def chunk_paper(pdf_path: Path) -> list[Chunk]:
     title = clean(paras[0][1]) if paras else paper
     chunks: list[Chunk] = []
     section, buf, buf_page = "Front matter", [], 1
+    in_references = False
 
     def flush():
         nonlocal buf
@@ -90,7 +96,16 @@ def chunk_paper(pdf_path: Path) -> list[Chunk]:
     for pno, raw in paras:
         text = clean(raw)
         if re.fullmatch(r"(references|bibliography)", text, re.I):
-            break  # v1: drop references AND everything after (appendices are lost too)
+            in_references = True  # skip the reference list, but resume at the first appendix heading
+            flush()
+            buf = []
+            continue
+        if in_references:
+            if not is_appendix_heading(text):
+                continue
+            in_references = False
+            section = text
+            continue
         if is_heading(text):
             flush()
             buf = []  # no overlap across sections
