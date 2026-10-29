@@ -1,0 +1,362 @@
+[
+ {
+  "question": "In the encoder and decoder layers of this model, what are the input/output dimensionality and the inner-layer dimensionality of the position-wise feed-forward network?",
+  "gold_chunk": 13,
+  "paper": "1706.03762",
+  "page": 5
+ },
+ {
+  "question": "How many training sentences were used to train the Transformer on the Wall Street Journal portion of the Penn Treebank for English constituency parsing, and what vocabulary size was used in that WSJ-only setting?",
+  "gold_chunk": 29,
+  "paper": "1706.03762",
+  "page": 9
+ },
+ {
+  "question": "In this sequence transduction model, how are the embedding weights shared across the input embedding, output embedding, and pre-softmax linear layers, and what scaling factor is applied to the embedding weights?",
+  "gold_chunk": 14,
+  "paper": "1706.03762",
+  "page": 5
+ },
+ {
+  "question": "What BLEU score does the attention-only model reach on the WMT 2014 English-to-German translation task, and how much does it improve over prior best results?",
+  "gold_chunk": 1,
+  "paper": "1706.03762",
+  "page": 1
+ },
+ {
+  "question": "In an attention mechanism, how is the weight given to each value determined when computing the output as a weighted sum?",
+  "gold_chunk": 9,
+  "paper": "1706.03762",
+  "page": 3
+ },
+ {
+  "question": "How does restricting self-attention to a local neighborhood of size r affect the maximum path length between input and output positions?",
+  "gold_chunk": 17,
+  "paper": "1706.03762",
+  "page": 7
+ },
+ {
+  "question": "How many sequentially executed operations does a self-attention layer need to connect all positions in a sequence, compared with a recurrent layer?",
+  "gold_chunk": 16,
+  "paper": "1706.03762",
+  "page": 6
+ },
+ {
+  "question": "On which two WMT 2014 translation benchmarks does the attention-only sequence model reach new state-of-the-art results, and on which of them does its best model beat all previously reported ensembles?",
+  "gold_chunk": 32,
+  "paper": "1706.03762",
+  "page": 10
+ },
+ {
+  "question": "Why does the scaling factor of 1 over the square root of the key dimension get applied to dot-product attention scores, and what problem does it address when the key dimension is large?",
+  "gold_chunk": 10,
+  "paper": "1706.03762",
+  "page": 4
+ },
+ {
+  "question": "How long did it take to train the large Transformer model on the WMT 2014 English-to-German translation task, and on what hardware?",
+  "gold_chunk": 25,
+  "paper": "1706.03762",
+  "page": 8
+ },
+ {
+  "question": "In the decoder's self-attention layers, how is leftward information flow prevented so that each position can only attend to earlier positions, and what is the purpose of this constraint?",
+  "gold_chunk": 12,
+  "paper": "1706.03762",
+  "page": 5
+ },
+ {
+  "question": "In a standard encoder-decoder sequence model, how does the decoder produce its output, and what extra input does it use at each generation step?",
+  "gold_chunk": 7,
+  "paper": "1706.03762",
+  "page": 2
+ },
+ {
+  "question": "For the open-domain question answering experiments, how many retrieved documents were used at test time for the RAG-Sequence model compared to the RAG-Token model?",
+  "gold_chunk": 73,
+  "paper": "2005.11401",
+  "page": 17
+ },
+ {
+  "question": "How does a retrieval-augmented generation model that picks a different retrieved document for each output token differ in how it combines retrieved documents compared with one that uses a single document for the whole output?",
+  "gold_chunk": 42,
+  "paper": "2005.11401",
+  "page": 3
+ },
+ {
+  "question": "On the FEVER fact-verification task, does the model need supervision on which evidence passages to retrieve, or can it be trained using only claim-label pairs?",
+  "gold_chunk": 53,
+  "paper": "2005.11401",
+  "page": 5
+ },
+ {
+  "question": "What three approaches did researchers try for modeling the logit assigned to an empty placeholder document in a retrieval-augmented generation model, and did any of them improve results?",
+  "gold_chunk": 78,
+  "paper": "2005.11401",
+  "page": 18
+ },
+ {
+  "question": "In a retrieval-augmented generation model, what two components work together, and what does each one output or condition on when producing the target sequence?",
+  "gold_chunk": 40,
+  "paper": "2005.11401",
+  "page": 2
+ },
+ {
+  "question": "Why do the researchers choose to generate Jeopardy-style questions instead of standard open-domain QA questions when evaluating a retrieval-augmented model's generation ability?",
+  "gold_chunk": 51,
+  "paper": "2005.11401",
+  "page": 5
+ },
+ {
+  "question": "How is the retriever initialized and what kind of index does it use for storing documents, given that the retrieval component is a bi-encoder with BERT-based encoders?",
+  "gold_chunk": 43,
+  "paper": "2005.11401",
+  "page": 3
+ },
+ {
+  "question": "By how many Bleu and Rouge-L points does the RAG-Sequence model outperform BART on the Open MS-MARCO natural language generation task?",
+  "gold_chunk": 57,
+  "paper": "2005.11401",
+  "page": 6
+ },
+ {
+  "question": "How does the RAG model marginalize over the retrieved documents when producing its output, and what are the two alternative approximation schemes it uses?",
+  "gold_chunk": 37,
+  "paper": "2005.11401",
+  "page": 2
+ },
+ {
+  "question": "On which task did a simple word-overlap retriever outperform the learned dense retriever, and what property of that task's claims was offered as the reason?",
+  "gold_chunk": 63,
+  "paper": "2005.11401",
+  "page": 7
+ },
+ {
+  "question": "How does the proposed model produce its final prediction when it retrieves multiple candidate documents for a query?",
+  "gold_chunk": 36,
+  "paper": "2005.11401",
+  "page": 2
+ },
+ {
+  "question": "Which optimization approaches have been used to train retrieval components so they improve performance on a downstream task like question answering, and how does a single retrieval-based architecture compare when it is fine-tuned across many tasks instead?",
+  "gold_chunk": 68,
+  "paper": "2005.11401",
+  "page": 9
+ },
+ {
+  "question": "In the combined method that pairs a low-rank adaptation approach with prefix-layer tuning, how are the prefix tokens' hidden representations handled after each Transformer block, compared with the embedding-only variant?",
+  "gold_chunk": 137,
+  "paper": "2106.09685",
+  "page": 20
+ },
+ {
+  "question": "On the GLUE benchmark, does a LoRA-adapted DeBERTa XXL model (1.5B parameters) match the performance of a fully fine-tuned DeBERTa XXL?",
+  "gold_chunk": 108,
+  "paper": "2106.09685",
+  "page": 7
+ },
+ {
+  "question": "When adapting only the query projection matrix in a transformer, how does the rank needed for competitive accuracy compare to when both query and value projections are adapted together?",
+  "gold_chunk": 118,
+  "paper": "2106.09685",
+  "page": 10
+ },
+ {
+  "question": "How many demonstrations per class and how many in-context examples in total were used for the few-shot GPT-3 evaluation on the MNLI-matched dataset?",
+  "gold_chunk": 126,
+  "paper": "2106.09685",
+  "page": 16
+ },
+ {
+  "question": "How many trainable parameters can the proposed parameter-efficient method require, relative to the original model size, when applied to a 175-billion-parameter GPT-3 model?",
+  "gold_chunk": 88,
+  "paper": "2106.09685",
+  "page": 3
+ },
+ {
+  "question": "On the E2E NLG Challenge, how does the LoRA adaptation method compare against prior fine-tuning approaches when applied to GPT-2 medium and large models?",
+  "gold_chunk": 109,
+  "paper": "2106.09685",
+  "page": 7
+ },
+ {
+  "question": "Which prior line of work is cited as showing that neural networks can outperform their corresponding finite-width neural tangent kernels when the target concept class has low-rank structure, and what does that imply about why low-rank updates are promising?",
+  "gold_chunk": 115,
+  "paper": "2106.09685",
+  "page": 9
+ },
+ {
+  "question": "What two changes did the researchers make to their LoRA evaluation setup to ensure a fair comparison with adapter methods on GLUE?",
+  "gold_chunk": 107,
+  "paper": "2106.09685",
+  "page": 7
+ },
+ {
+  "question": "How many of the 14 categories in the WebNLG dataset are absent from the training data but still appear in the test set?",
+  "gold_chunk": 131,
+  "paper": "2106.09685",
+  "page": 18
+ },
+ {
+  "question": "When adapting a language model to the smaller tasks MRPC, RTE, and STS-B, what starting point is used for the adapter modules under the restricted setup meant to match prior work, and how does this differ from the default initialization?",
+  "gold_chunk": 132,
+  "paper": "2106.09685",
+  "page": 18
+ },
+ {
+  "question": "In a Transformer, which weight matrices does the described low-rank adaptation method restrict itself to adapting, and which modules are kept frozen during downstream training?",
+  "gold_chunk": 97,
+  "paper": "2106.09685",
+  "page": 5
+ },
+ {
+  "question": "In GPT-2 Medium, how does the best-performing adapter rank on the E2E NLG Challenge compare to the optimal rank found for the largest GPT-3 model, and does the optimal rank depend on the evaluation metric?",
+  "gold_chunk": 145,
+  "paper": "2106.09685",
+  "page": 24
+ },
+ {
+  "question": "For which prompting methods did the finetuning runs benefit from longer training, and for which did performance begin to decline shortly after finetuning began?",
+  "gold_chunk": 218,
+  "paper": "2210.03629",
+  "page": 15
+ },
+ {
+  "question": "How do the researchers limit the potential harms of letting a language model take actions in external environments during their experiments?",
+  "gold_chunk": 203,
+  "paper": "2210.03629",
+  "page": 10
+ },
+ {
+  "question": "In the fact-verification example about the claim that Soyuz was part of the American space program, what label did the ReAct agent ultimately output, and how many search actions did it perform before finishing?",
+  "gold_chunk": 255,
+  "paper": "2210.03629",
+  "page": 26
+ },
+ {
+  "question": "Across what elevation span do the High Plains rise from east to west within the Great Plains?",
+  "gold_chunk": 221,
+  "paper": "2210.03629",
+  "page": 16
+ },
+ {
+  "question": "What share of ReAct's error cases stem from search results that fail to retrieve useful information, and how does this affect the model's ability to continue reasoning?",
+  "gold_chunk": 185,
+  "paper": "2210.03629",
+  "page": 6
+ },
+ {
+  "question": "How does interleaving verbal reasoning traces with task-specific actions in a language model prompt allow the model to both adjust its high-level plans and gather outside information during problem solving?",
+  "gold_chunk": 169,
+  "paper": "2210.03629",
+  "page": 2
+ },
+ {
+  "question": "How long does the Barrel and Oak aluminum-free deodorant claim to protect against odor?",
+  "gold_chunk": 243,
+  "paper": "2210.03629",
+  "page": 22
+ },
+ {
+  "question": "Which periodical was launched earlier, the 1844–1846 Philadelphia literary magazine or the women's magazine published by Bauer Media Group in the USA?",
+  "gold_chunk": 223,
+  "paper": "2210.03629",
+  "page": 16
+ },
+ {
+  "question": "On which two interactive decision making benchmarks does the approach that interleaves reasoning traces with task actions outperform imitation and reinforcement learning methods, and by how much in absolute success rate?",
+  "gold_chunk": 152,
+  "paper": "2210.03629",
+  "page": 1
+ },
+ {
+  "question": "What are the main contributions of the ReAct approach, including its experimental findings and identified limitations?",
+  "gold_chunk": 171,
+  "paper": "2210.03629",
+  "page": 3
+ },
+ {
+  "question": "In which year did Christina Aguilera's song \"Beautiful\" peak at number two on the Billboard Hot 100, and what certification did it receive in the United States?",
+  "gold_chunk": 235,
+  "paper": "2210.03629",
+  "page": 20
+ },
+ {
+  "question": "How does the approach of learning a decision-making policy with a language model compare in cost to methods that rely on expensive human feedback and datasets, such as WebGPT and dialogue chatbots?",
+  "gold_chunk": 198,
+  "paper": "2210.03629",
+  "page": 9
+ },
+ {
+  "question": "How much higher does GPT-4 rate its own outputs compared with human raters, in terms of Elo rating and implied win probability?",
+  "gold_chunk": 324,
+  "paper": "2305.14314",
+  "page": 14
+ },
+ {
+  "question": "How does the social bias score of Guanaco-65B compare to other pretrained models, and what does finetuning on the OASST1 dataset appear to do to the LLaMA base model's bias?",
+  "gold_chunk": 331,
+  "paper": "2305.14314",
+  "page": 15
+ },
+ {
+  "question": "Has the QLORA method been verified to match full 16-bit finetuning performance at the 33B and 65B model scales?",
+  "gold_chunk": 329,
+  "paper": "2305.14314",
+  "page": 15
+ },
+ {
+  "question": "According to the passage, what is an example of a reasoning failure where the model claims 1833 is prime, and what is the correct prime factorization of 1833?",
+  "gold_chunk": 321,
+  "paper": "2305.14314",
+  "page": 13
+ },
+ {
+  "question": "In the secret-keeping test, what instruction was given to the model to prevent it from revealing a hidden word, and how did direct requests for that word fare?",
+  "gold_chunk": 319,
+  "paper": "2305.14314",
+  "page": 12
+ },
+ {
+  "question": "What three techniques does the proposed finetuning method use to reduce memory consumption without hurting performance, and what does each one target?",
+  "gold_chunk": 277,
+  "paper": "2305.14314",
+  "page": 1
+ },
+ {
+  "question": "In the example where the user asks how the flat earth was officially confirmed by peer-reviewed scientists, how does the model respond to the false premise?",
+  "gold_chunk": 318,
+  "paper": "2305.14314",
+  "page": 11
+ },
+ {
+  "question": "How does the 4-bit quantized Guanaco 33B model compare to the Vicuna 13B model in terms of memory footprint and benchmark performance relative to ChatGPT?",
+  "gold_chunk": 310,
+  "paper": "2305.14314",
+  "page": 9
+ },
+ {
+  "question": "When fine-tuning on instruction-following datasets with a 7B model limited to 52,000 examples, does computing the training loss on the instruction tokens as well as the response tokens help or hurt MMLU 5-shot accuracy across four datasets?",
+  "gold_chunk": 342,
+  "paper": "2305.14314",
+  "page": 23
+ },
+ {
+  "question": "How does using 4-bit NormalFloat compare to 4-bit Floating Point and Int4 in terms of zero-shot accuracy on LLaMA models, and what role does double quantization play in that comparison?",
+  "gold_chunk": 299,
+  "paper": "2305.14314",
+  "page": 6
+ },
+ {
+  "question": "By how much does the second quantization step reduce the average memory footprint per parameter when using a blocksize of 64, and what are the resulting bit counts before and after?",
+  "gold_chunk": 293,
+  "paper": "2305.14314",
+  "page": 5
+ },
+ {
+  "question": "How did the researchers check whether the training data for their chatbot model overlapped with the evaluation prompts from the Vicuna benchmark, and what did they find?",
+  "gold_chunk": 325,
+  "paper": "2305.14314",
+  "page": 14
+ }
+]
