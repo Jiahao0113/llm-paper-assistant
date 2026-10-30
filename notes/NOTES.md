@@ -176,3 +176,25 @@ Code: `step2_retrieval/embedding_demo.py`, `step2_retrieval/mini_retriever.py`
 ### First retrieval results (`src/copilot/retrieval.py`, 5 papers -> 231 chunks)
 - Good on definitional questions (multi-head attention, RAG, optimal LoRA rank).
 - Failure: "What is the ReAct prompting format?" ranked a "Reproducibility statement" chunk first. Eyeballing 5 queries does not scale, which motivates a labeled test set and recall@k (Step 4).
+
+---
+
+## 6. Evaluation and better retrieval (Step 4-5)
+
+### Retrieval metrics
+- **recall@k**: fraction of questions whose gold chunk is in the top k. **MRR**: mean of 1/rank of the gold chunk (rewards ranking it high). High recall@5 with low MRR => answer is in the candidates but ranked low => use a reranker.
+- Synthetic test set: an LLM writes a question per sampled chunk; that chunk is the gold label. Cheap, but **lexical leakage** (61% of question content words appeared verbatim in the gold chunk) favored keyword matching. Gold labels are also incomplete (several chunks can answer a question), so allow multiple gold chunks.
+- **Variance vs bias**: more questions reduce random error but not systematic bias from how the set was built. A significant result on a biased set is not a general result.
+- A realistic test set needs: real user phrasing, varied styles (keywords / full sentences), with and without entity names, mixed question types (fact, compare, summarize, multi-hop), difficulty spread, and unanswerable questions.
+
+### BM25 vs dense
+- **TF-IDF** = Term Frequency x Inverse Document Frequency. **BM25** = "Best Matching 25" (25th ranking function variant of the Okapi system). BM25 improves TF-IDF with term-frequency saturation (k1) and document-length normalization (b); IDF makes rare terms count more.
+- BM25 matches exact words (names, symbols, acronyms); dense matches meaning (paraphrases). Their weaknesses are opposite, so combine them: **hybrid** with **RRF** (score = sum of 1/(60+rank) over systems; uses ranks only because score scales differ).
+- Results flipped between test sets (BM25 won on the leaky synthetic set; dense won on hand-written paraphrased questions). Hybrid is a hedge: robust, not always best.
+
+### Reranking (cross-encoder)
+- Bi-encoder: query and chunk are encoded separately, vectors can be precomputed (fast, lossy). Cross-encoder: query and chunk go through one Transformer together, giving a precise relevance score, but needs one forward pass per pair (cannot precompute).
+- Standard two-stage pipeline: cheap retrieval of top-N candidates (hybrid, N=30), then cross-encoder reranks, then top-5 go to the LLM.
+- Result (cross-encoder/ms-marco-MiniLM-L-6-v2): synthetic n=60: recall@1 0.683 -> 0.767, MRR 0.789 -> 0.855; hand-written n=15: recall@1 0.467 -> 0.600, MRR 0.592 -> 0.717. Same direction on both sets, but n is small.
+
+Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.py`, `eval/compare_v2.py`, `eval/compare_rerank.py`
