@@ -20,7 +20,12 @@ class Retriever:
     def _bm25(self, q):
         return list(np.argsort(self.bm25.scores(q))[::-1])
 
+    def retrieve_ids(self, q: str, k: int = 5, paper: str | None = None):
+        cands = rrf([self._dense(q)[:100], self._bm25(q)[:100]])
+        if paper:
+            cands = [c for c in cands if self.idx.chunks[c].paper == paper]
+        cands = cands[: self.top_n]
+        return rerank(q, cands, [self.texts[c] for c in cands])[:k]
+
     def retrieve(self, q: str, k: int = 5):
-        cands = rrf([self._dense(q)[:100], self._bm25(q)[:100]])[: self.top_n]
-        ranked = rerank(q, cands, [self.texts[c] for c in cands])[:k]
-        return [(0.0, self.idx.chunks[c]) for c in ranked]  # score slot kept for compatibility with rag.build_prompt
+        return [(0.0, self.idx.chunks[c]) for c in self.retrieve_ids(q, k)]  # score slot kept for compatibility with rag.build_prompt

@@ -198,3 +198,20 @@ Code: `step2_retrieval/embedding_demo.py`, `step2_retrieval/mini_retriever.py`
 - Result (cross-encoder/ms-marco-MiniLM-L-6-v2): synthetic n=60: recall@1 0.683 -> 0.767, MRR 0.789 -> 0.855; hand-written n=15: recall@1 0.467 -> 0.600, MRR 0.592 -> 0.717. Same direction on both sets, but n is small.
 
 Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.py`, `eval/compare_v2.py`, `eval/compare_rerank.py`
+
+---
+
+## 7. Generation evaluation and the agent (Step 4 end, Step 6)
+
+### Generation evaluation (`eval/eval_generation.py`)
+- Dimensions: **correctness** (answer right), **faithfulness / groundedness** (every claim supported by the retrieved passages), **citation accuracy**, **abstention** (refuse unanswerable questions, do not refuse answerable ones). Faithful-but-wrong happens when retrieval gives the wrong passage; correct-but-unfaithful happens when the model answers from memory.
+- **LLM-as-judge**: a different model from the generator (limits self-preference), structured output with a reasoning field, reference passages for correctness. Known issues: self-preference, length/position bias, plain mistakes, instability. Always validate the judge against human reading.
+- Real bugs found by reading judge reasoning: passages truncated for the judge (faithful 11/15 -> 14/15 after the fix) and missing paper metadata. **Evaluation code needs evaluating too.**
+- Generation is non-deterministic (new Claude models expose no temperature), so repeat runs; on n=20 a 1-question difference is noise.
+- Failure attribution: if the gold chunk is not in the top-k and the model refuses, that is a **retrieval** failure; fix retrieval, not the prompt. Final recall@k <= first-stage candidate recall@N.
+
+### Agent (`src/copilot/agent.py`)
+- Agent = LLM + tools + loop + stop condition; control flow is decided by the model instead of a fixed pipeline. Tools: `search_papers(query, paper?)` (hybrid + rerank) and `final_answer(...)`. Max-step cap with a forced final answer.
+- Agent vs fixed RAG: more capable (rephrases queries, restricts to a paper, splits comparisons) but ~3x tokens, less predictable, harder to debug.
+- Tool arguments are **not guaranteed** to follow the schema (a run crashed with `KeyError: 'citations'`); validate tool inputs, unlike constrained-decoding structured output.
+- Results on 20 questions, 3 runs: all 15 answerable questions answered correctly (RAG: 13/15), wrongly refused 0 (RAG: 1-2), unanswerable refused 5/5 in every run. Cost: ~2 searches/question, ~5.5-6k input tokens vs ~1.5-2k for RAG. Caveats: the agent sees more chunks than top-5; the set is small and was used while developing; agent queries benefit from the model's prior knowledge of the domain.

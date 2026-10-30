@@ -1,0 +1,454 @@
+[
+ {
+  "q": "Why is attention scaled before the softmax, and by how much?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5756,
+  "searches": [
+   {
+    "query": "scaled dot-product attention scaling before softmax dot products large magnitude",
+    "paper": "1706.03762"
+   },
+   {
+    "query": "divide by square root of key dimension d_k",
+    "paper": "1706.03762"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "Attention is scaled before the softmax to counteract large dot-product magnitudes. The authors suspect that for large d_k the dot products grow large in magnitude, pushing the softmax into regions where it has extremely small gradients [c10]. The paper illustrates this by assuming the components of q and k are independent random variables with mean 0 and variance 1, so that their dot product has growing variance with d_k [c11]. To counteract this, the dot products are divided by √d_k, where d_k is the dimension of the keys (queries and keys have dimension d_k) [c10]. In the paper's configuration with h = 8 heads, d_k = d_v = d_model/h = 64, so the scale factor is 1/√64 = 1/8 [c11]. Scaling is what distinguishes scaled dot-product attention from plain dot-product attention; the two are otherwise identical [c10].",
+  "judge_reasoning": "The answer states that dot products grow large for large d_k, pushing softmax into small-gradient regions, and that the fix is dividing by sqrt(d_k). All of this is directly in passage [1]. The variance illustration (mean 0, variance 1 components) is in footnote 4 within passage [3]; the claim that the dot product 'has growing variance with d_k' is truncated in the passage (the sum is cut off) but is a direct, standard completion of the illustration and consistent with it, so it is a very minor extrapolation. The d_k = 64 with h = 8 and the resulting 1/8 factor are supported by passage [3] (1/sqrt(64) = 1/8 is simple arithmetic). The claim that scaling is the only difference from dot-product attention is in passage [1]. The answer is consistent with the reference and answers both the why and the by-how-much parts. The slight inference about variance growing with d_k is not explicitly shown in the cut-off text, but it is a minimal inference, so I consider the answer faithful."
+ },
+ {
+  "q": "How does the model know the order of words when it has no recurrence or convolution?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5649,
+  "searches": [
+   {
+    "query": "positional encoding to inject order of tokens without recurrence or convolution",
+    "paper": "1706.03762"
+   },
+   {
+    "query": "sine and cosine functions positional encodings added to input embeddings",
+    "paper": "1706.03762"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "Because the Transformer has no recurrence or convolution, it injects order information by adding \"positional encodings\" to the input embeddings at the bottoms of the encoder and decoder stacks. The encodings have the same dimension d_model as the embeddings so they can be summed. The paper uses fixed sine and cosine functions of different frequencies, with each dimension corresponding to a sinusoid. The authors chose this because it may let the model attend by relative positions (for a fixed offset k, PE(pos+k) is a linear function of PE(pos)) and may extrapolate to longer sequences. Learned positional embeddings gave nearly identical results [c15]. The sums of embeddings and positional encodings are also subject to dropout [c24].",
+  "judge_reasoning": "The answer claims: positional encodings added to input embeddings at bottoms of encoder/decoder stacks (passage 1), same dimension d_model so they can be summed (1), sine/cosine of different frequencies with each dimension a sinusoid (1), chosen for relative position attention with PE(pos+k) linear in PE(pos) and extrapolation to longer sequences (1), learned embeddings gave nearly identical results (1), and dropout applied to sums of embeddings and positional encodings (passage 6). All claims are supported by the retrieved passages. The answer matches the reference passage and directly addresses the question."
+ },
+ {
+  "q": "What optimizer and learning rate schedule were used to train the model?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": false,
+  "correct": true,
+  "steps": 2,
+  "tokens": 6800,
+  "searches": [
+   {
+    "query": "optimizer and learning rate schedule used for training",
+    "paper": "1706.03762"
+   },
+   {
+    "query": "optimizer and learning rate schedule used for training",
+    "paper": "2106.09685"
+   },
+   {
+    "query": "optimizer and learning rate schedule used for training",
+    "paper": "2305.14314"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The question is ambiguous across the library, but the primary answer concerns the Transformer (Attention Is All You Need):\n\n**Optimizer:** Adam with β1 = 0.9, β2 = 0.98, and ε = 10⁻⁹ [c22].\n\n**Learning rate schedule:** The learning rate was varied over training according to lrate = d_model^-0.5 · min(step_num^-0.5, step_num · warmup_steps^-1.5). This increases the learning rate linearly for the first warmup_steps training steps, then decreases it proportionally to the inverse square root of the step number, with warmup_steps = 4000 [c22].\n\nFor the other papers in the library: LoRA uses AdamW with a linear learning rate decay schedule [c132, c133], and QLoRA uses AdamW-style Adam with beta2 of 0.999 and a constant learning rate schedule (chosen over linear and cosine schedules), with the learning rate halved for 33B and 65B models [c341, c304].",
+  "judge_reasoning": "The core answer (Adam with β1=0.9, β2=0.98, ε=1e-9; warmup schedule with warmup_steps=4000, linear increase then inverse-sqrt decay) matches passage [1] and the reference. The lrate formula with d_model is a faithful reconstruction of the garbled formula in [1]. LoRA claims (AdamW, linear decay) are supported by [6],[7],[8]. QLoRA claims: constant LR schedule over linear/cosine, beta2 0.999, and halved LR for 33B/65B are supported by [13] and [11]. However, 'QLoRA uses AdamW-style Adam' is a loose characterization; passages only say 'Adam beta2 of 0.999' and 'paged optimizers' and do not state AdamW for QLoRA, so that is a minor unsupported claim. The answer is correct with respect to the reference."
+ },
+ {
+  "q": "How does the system decide which documents to fetch for a given input?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5165,
+  "searches": [
+   {
+    "query": "how documents are retrieved for a given input query retriever",
+    "paper": "2005.11401"
+   },
+   {
+    "query": "maximum inner product search top-k documents dense retrieval",
+    "paper": "2005.11401"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "In RAG (2005.11401), the retrieval component p_η(z|x) is based on DPR, a bi-encoder: a BERT-base document encoder produces dense representations d(z) of documents, and a BERT-base query encoder produces a query representation q(x) [c43]. The system fetches the top-k documents, i.e. the k documents z with the highest prior probability p_η(z|x) for the input x. Computing this top-k is a Maximum Inner Product Search (MIPS) problem, which can be approximately solved in sub-linear time [c43]. In practice, the document index is built with FAISS using a Hierarchical Navigable Small World approximation over ~21M 100-word Wikipedia chunks [c48], and k is set to 5 or 10 during training, with the test-time k chosen using dev data [c48]. The retrieved documents are then used as latent variables: for RAG-Sequence the same document is used to generate the full output and the results are marginalized over the top-K documents, while RAG-Token can draw a different document for each target token [c42]. The retriever's query encoder is fine-tuned jointly with the generator, while the document encoder and index stay fixed [c45].",
+  "judge_reasoning": "The answer's claims map directly to the retrieved passages: DPR bi-encoder with BERT-base encoders and top-k by highest p(z|x) via MIPS solved approximately in sub-linear time (passage 4); FAISS with HNSW over ~21M 100-word Wikipedia chunks and k in {5,10} for training with test-time k set on dev data (passage 8); RAG-Sequence vs RAG-Token latent document marginalization (passage 9); query encoder and generator fine-tuned while document encoder and index fixed (passage 2). No unsupported claims. The answer is consistent with the reference passages (MIPS over query/document embeddings for top-K) and directly addresses the question."
+ },
+ {
+  "q": "What is the difference between generating from one retrieved document versus mixing documents per token?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5017,
+  "searches": [
+   {
+    "query": "RAG-Sequence versus RAG-Token generating from one document vs mixing documents per token",
+    "paper": "2005.11401"
+   },
+   {
+    "query": "marginalize over retrieved documents per output token",
+    "paper": "2005.11401"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The difference lies in where the marginalization over retrieved documents happens.\n\n**RAG-Sequence (one document for the whole output):** The model uses the same retrieved document to generate the complete sequence. The retrieved document is treated as a single latent variable, marginalized to get the sequence probability p(y|x) via a top-K approximation: the generator produces an output sequence probability for each of the top K documents, and these are then marginalized [c42]. In the paper's words, the model \"uses the same document to predict each target token\" [c41].\n\n**RAG-Token (mixing documents per token):** A different latent document can be drawn for each target token. The top K documents are retrieved, the generator produces a next-token distribution for each document, these are marginalized, and the process repeats with the following token [c42]. This \"allows the generator to choose content from several documents when producing an answer\" [c42].\n\n**Observed effects:** On Jeopardy question generation, RAG-Token performed better than RAG-Sequence, and the paper suggests this is because Jeopardy questions often contain two separate pieces of information that RAG-Token can combine from several documents [c58, c59]. Retrieving more documents at test time monotonically improves Open-domain QA for RAG-Sequence, while RAG-Token's QA performance peaks at 10 retrieved documents [c65].\n\n**Note:** For sequence classification, where the target is a single class, the two variants are equivalent [c42].",
+  "judge_reasoning": "The answer's claims match the retrieved passages: RAG-Sequence uses the same document for the whole sequence, treated as a single latent variable marginalized via top-K; RAG-Token draws a different document per token, with next-token distributions marginalized and repeated. The observed effects (RAG-Token better on Jeopardy, combining content from several documents; more documents monotonically improve Open-domain QA for RAG-Sequence while RAG-Token peaks at 10; equivalence for sequence classification) are all supported by passages 1-5. The citation labels differ in format but the content is supported. The answer is consistent with the reference passages and directly addresses the question."
+ },
+ {
+  "q": "Can the knowledge be refreshed without retraining the model?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 6112,
+  "searches": [
+   {
+    "query": "update knowledge without retraining the model"
+   },
+   {
+    "query": "non-parametric memory update knowledge index",
+    "paper": "2005.11401"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "Yes, for RAG-style models. The RAG paper notes that non-parametric memory models can have their knowledge easily updated at test time, whereas parametric-only models like T5 or BART need further training to update as the world changes [c64]. The authors state that the retrieval index can be hot-swapped to update the model without any retraining [c71], and that the non-parametric memory can be replaced to update the model's knowledge as the world changes [c39].\n\nIn their experiment, they built an index from a December 2016 Wikipedia dump and compared it with a December 2018 index on questions about 82 world leaders whose positions changed between those dates. RAG answered 70% correctly with the 2016 index for 2016 leaders and 68% with the 2018 index for 2018 leaders, while mismatched indices performed poorly (12% and 4%), showing that replacing the non-parametric memory updates the model's world knowledge [c64].\n\nNote that this applies to the retrieval index in RAG; the evidence does not address updating the parametric (generator) component without training.",
+  "judge_reasoning": "The answer claims: (1) non-parametric memory knowledge can be easily updated at test time while parametric-only models like T5/BART need further training \\u2014 supported by passage [2]; (2) index can be hot-swapped without retraining \\u2014 passage [1]; (3) non-parametric memory can be replaced to update knowledge \\u2014 passage [3]; (4) the experiment details (Dec 2016 vs Dec 2018 indices, 82 world leaders, 70%/68%, 12%/4%) \\u2014 all match passage [2]; (5) the caveat that evidence doesn't address updating the parametric component is a reasonable meta-statement. The citation tags differ in format but the content is supported. The answer is consistent with the reference passages and directly addresses the question."
+ },
+ {
+  "q": "Which attention projections get adapted, and does adapting more of them help?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5755,
+  "searches": [
+   {
+    "query": "which attention weight matrices to adapt Wq Wk Wv Wo LoRA",
+    "paper": "2106.09685"
+   },
+   {
+    "query": "adapting more weight matrices versus higher rank performance",
+    "paper": "2106.09685"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "LoRA can be applied to the four self-attention projections Wq, Wk, Wv, and Wo, with the MLP modules frozen [c97]. The main experiments adapt only Wq and Wv for simplicity [c106].\n\nAdapting more projection types helps under a fixed parameter budget. On GPT-3 175B with 18M trainable parameters, adapting both Wq and Wv gave the best overall performance, while putting all parameters into ΔWq or ΔWk alone performed significantly worse [c117]. The paper concludes it is preferable to adapt more weight matrices with a small rank than one type with a larger rank [c117]. Adapting {Wq, Wv} stays competitive even at rank 1, whereas Wq alone needs a larger rank [c118].\n\nCaveat: the retrieved passages do not show a result comparing adapting all four of Wq, Wk, Wv, Wo against Wq and Wv at equal budget, so I can't confirm that all four is better.",
+  "judge_reasoning": "The answer states LoRA can be applied to Wq, Wk, Wv, Wo with MLP frozen (passage 1), main experiments use Wq and Wv (passage 4), under an 18M budget adapting both Wq and Wv is best while single Wq or Wk is significantly worse, and adapting more matrices at smaller rank is preferable (passage 2), and {Wq, Wv} is competitive at rank 1 while Wq alone needs larger r (passage 5). The caveat about not seeing a four-matrix comparison is accurate given the passages. All claims are supported and match the reference passages, addressing both parts of the question."
+ },
+ {
+  "q": "Why does the method not slow down inference after deployment?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 4652,
+  "searches": [
+   {
+    "query": "does not slow down inference after deployment"
+   },
+   {
+    "query": "no additional inference latency merging trainable matrices"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The method is LoRA. It does not slow inference after deployment because the trainable low-rank matrices are merged into the frozen weights: you compute and store W = W0 + BA and then run inference as usual, so there is no additional inference latency compared to a fine-tuned model, by construction [c96][c85]. By contrast, adapter layers are computed sequentially in addition to the base model and add latency, which can be significant in online, small-batch, short-sequence settings (slow-down up to over 30%) [c127][c128][c92]. A trade-off is that merged weights make it hard to batch inputs for different tasks in one forward pass; if latency is not critical, LoRA modules can be left unmerged and chosen dynamically per sample [c99].",
+  "judge_reasoning": "The answer states that LoRA merges low-rank matrices into frozen weights (W = W0 + BA), yielding no additional inference latency by construction, which matches passages [1] and [4] and the reference. The contrast with adapter layers (sequential, extra computation, up to 30%+ slow-down in online short-sequence settings) is supported by passages [2], [3], [6]. The trade-off about batching different tasks and optionally leaving modules unmerged is supported by passage [5]. All claims are grounded in the retrieved passages, and the answer is consistent with the reference."
+ },
+ {
+  "q": "How are the two small matrices initialized at the start of training?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5588,
+  "searches": [
+   {
+    "query": "initialization of low-rank matrices A and B at the start of training",
+    "paper": "2106.09685"
+   },
+   {
+    "query": "random Gaussian initialization for A and zero initialization for B",
+    "paper": "2106.09685"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "In LoRA, the two low-rank matrices are initialized asymmetrically: A gets a random Gaussian initialization, and B is set to zero. Because B = 0, the update ∆W = BA is zero at the beginning of training [c95][c94].",
+  "judge_reasoning": "The answer states that A gets random Gaussian initialization and B is zero, so \\u2206W = BA is zero at the start of training. This is directly stated in passages [1] and [2]. All claims are supported. The answer matches the reference passages and addresses the question. The citation markers ([c95][c94]) don't match passage numbering, but the factual content is fully supported."
+ },
+ {
+  "q": "What number format is used for the frozen weights, and why does it suit the weight distribution?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 6197,
+  "searches": [
+   {
+    "query": "frozen weights quantized number format weight distribution",
+    "paper": "2305.14314"
+   },
+   {
+    "query": "NormalFloat data type normal distribution quantile",
+    "paper": "2305.14314"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The frozen base-model weights are stored in 4-bit NormalFloat (NF4), a data type the paper calls information-theoretically optimal for normally distributed weights [c277]. It suits the weight distribution because NF is built from quantiles of a standard normal N(0,1), normalized into [−1, 1], with weights quantized after absolute-maximum rescaling [c291]. This gives each quantization bin an equal expected number of values from the input tensor [c289], matched to the roughly normal distribution of pretrained weights, though the paper notes some exceptions [c346]. It empirically outperforms 4-bit floating point and integer types [c299][c281]. During computation, weights are dequantized to BFloat16 before the matrix multiplication [c289].",
+  "judge_reasoning": "The answer states frozen weights use 4-bit NormalFloat (NF4), information-theoretically optimal for normally distributed weights. This matches passages [4], [9], [8]. Claims about quantiles of N(0,1), normalization to [-1,1], absmax rescaling are in [1]. Equal expected number of values per bin is in [7]/[8]. Exceptions to normality are in [5]. Outperforming FP4 and Int4 is in [6]/[9]. Dequantization to BFloat16 before matmul is in [7]. All claims are supported by the retrieved passages. The answer is consistent with the reference passages and addresses both parts of the question (format and why it suits the distribution)."
+ },
+ {
+  "q": "How do they avoid out-of-memory crashes caused by occasional memory peaks during training?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5583,
+  "searches": [
+   {
+    "query": "avoid out-of-memory crashes caused by occasional memory peaks during training"
+   },
+   {
+    "query": "memory spikes during fine-tuning gradient checkpointing paged optimizers"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "They use Paged Optimizers. QLoRA uses NVIDIA unified memory to avoid the gradient checkpointing memory spikes that occur when processing a mini-batch with a long sequence length [c281]. The paper states that paged optimizers prevent these memory spikes during gradient checkpointing from causing out-of-memory errors that have traditionally made single-machine finetuning difficult [c289], and all of its experiments use NF4 QLoRA with double quantization and paged optimizers for this purpose [c304]. The other QLoRA techniques (4-bit NormalFloat and double quantization) reduce the overall memory footprint, but the spike-specific mitigation is the paged optimizer [c281][c284].",
+  "judge_reasoning": "The answer identifies Paged Optimizers, which use NVIDIA unified memory to avoid gradient checkpointing memory spikes. This is directly supported by passages [7] (unified memory, long sequence length mini-batch spikes), [6] (prevent spikes from causing OOM errors that made single-machine finetuning difficult), and [1] (all experiments use NF4 QLoRA with double quantization and paged optimizers). The claim that NF4 and double quantization reduce overall memory footprint is supported by [5] and [7]. The answer matches the reference passages, which describe paged optimizers using unified memory to handle occasional GPU OOM by paging optimizer states to CPU RAM. The answer omits the CPU paging detail but is consistent and addresses the question."
+ },
+ {
+  "q": "How much GPU memory does finetuning a 65B model need before and after the technique?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 6261,
+  "searches": [
+   {
+    "query": "finetuning 65B model GPU memory requirement",
+    "paper": "2305.14314"
+   },
+   {
+    "query": "memory requirement reduction 48GB single GPU 65B parameter model"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "Per the QLoRA paper, regular 16-bit finetuning of a LLaMA 65B model requires more than 780 GB of GPU memory [c278][c280]. QLoRA reduces the average memory requirement of finetuning a 65B model to under 48 GB, allowing it to be finetuned on a single 48GB GPU, without degrading runtime or predictive performance relative to the 16-bit baseline [c280][c277].",
+  "judge_reasoning": "The answer states that 16-bit finetuning of LLaMA 65B needs >780 GB and QLoRA reduces it to <48 GB, enabling finetuning on a single 48GB GPU without degrading runtime or predictive performance. All of these claims are directly supported by passages [1], [2], and [4]. The citation tags differ from passage numbering, but the content is supported. The answer matches the reference passages and addresses both before and after memory values."
+ },
+ {
+  "q": "What problems of pure step-by-step reasoning does acting in an environment fix?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 6484,
+  "searches": [
+   {
+    "query": "problems of chain-of-thought reasoning hallucination error propagation acting in environment",
+    "paper": "2210.03629"
+   },
+   {
+    "query": "reasoning traces without grounding in external environment limitations",
+    "paper": "2210.03629"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "According to the ReAct paper, pure chain-of-thought reasoning is a static black box: the model relies only on its own internal representations and is not grounded in the external world. This limits its ability to reason reactively or update its knowledge, and leads to fact hallucination and error propagation over the reasoning process [c168]. Acting in an environment (e.g., querying a Wikipedia API) addresses these issues: ReAct \"overcomes prevalent issues of hallucination and error propagation in chain-of-thought reasoning by interacting with\" the external source [c152]. Interleaving actions also gives the model fresh observations, so reasoning traces can induce, track, and update action plans and handle exceptions, while actions let it gather information from external sources [c152]. In the error analysis, CoT failures were dominated by hallucination (56%), whereas ReAct's failures were mostly wrong reasoning traces (47%) and search errors (23%), with 0% hallucinated reasoning in that sample [c183].",
+  "judge_reasoning": "The answer's core claims (CoT is a static black box, not grounded, limits reactive reasoning/knowledge updates, causes hallucination and error propagation; ReAct overcomes these via Wikipedia API; reasoning traces help induce/track/update plans and handle exceptions; actions gather external info) are all supported by passages [1] and [2]. The error-analysis claim: CoT hallucination 56% failure and ReAct reasoning error 47%, search error 23%, hallucination 0% is supported by Table 2 in passage [4] (columns ReAct then CoT: reasoning error 47% vs 16%, search result error 23% vs -, hallucination 0% vs 56%). The table is flattened but the interpretation matches the reference passage ('major failure mode (56%)' for CoT hallucination). Minor nuance: the answer attributes the plan/exception-handling benefit to 'interleaving actions' while the source credits reasoning traces, but the answer states this correctly. Citation ids differ but content is grounded. The answer is consistent with the reference and addresses the question."
+ },
+ {
+  "q": "What can the agent actually do to look things up on Wikipedia?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5838,
+  "searches": [
+   {
+    "query": "Wikipedia API actions search lookup",
+    "paper": "2210.03629"
+   },
+   {
+    "query": "agent actions Search[entity] Lookup[string] Finish",
+    "paper": "2210.03629"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "In the ReAct paper, the agent interacts with a simple Wikipedia web API that offers three action types [c178]:\n\n1. **search[entity]**: If the entity's Wikipedia page exists, it returns the first 5 sentences of that page. If not, it suggests the top-5 similar entities from Wikipedia's search engine [c178]. For example, searching \"Adam Clayton Powell\" failed and returned similar titles, and the agent then searched the exact title \"Adam Clayton Powell (film)\" [c239, c222].\n2. **lookup[string]**: Returns the next sentence on the current page containing the string, simulating Ctrl+F in a browser [c178]. For example, the agent looked up \"named after\" on the Milhouse page to find the answer [c222].\n3. **finish[answer]**: Ends the task with the given answer [c178].\n\nThe authors note this action space can only retrieve a small part of a passage based on exact passage name, which is much weaker than modern lexical or neural retrievers; the design intentionally simulates how humans use Wikipedia and forces the model to retrieve through explicit reasoning in language [c178]. The agent also cannot edit Wikipedia; the experiments were restricted to Wikipedia or WebShop to limit risks [c203].",
+  "judge_reasoning": "The answer lists the three actions (search, lookup, finish) with details matching passage [1] exactly. The examples (Adam Clayton Powell search failing then searching the film title; Milhouse lookup 'named after') match passage [6]. The note about the limited action space and design intent matches [1]. The claim that the agent cannot edit Wikipedia and experiments were restricted to Wikipedia/WebShop matches passage [5]. All claims are supported, and the answer is consistent with the reference passage and directly addresses the question."
+ },
+ {
+  "q": "Besides question answering, which interactive environments was the agent tested on?",
+  "answerable_q": true,
+  "retrieved_gold": true,
+  "model_answerable": true,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5861,
+  "searches": [
+   {
+    "query": "interactive environments agent tested on besides question answering",
+    "paper": "2210.03629"
+   },
+   {
+    "query": "ALFWorld WebShop decision making benchmark evaluation",
+    "paper": "2210.03629"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "Besides question answering (and fact verification), the ReAct agent was tested on two language-based interactive decision-making environments: ALFWorld and WebShop [c189]. ALFWorld is a synthetic text-based game aligned with the embodied ALFRED benchmark, where the agent navigates and interacts with a simulated household via text actions [c190]. WebShop is an online shopping website environment with real-world products, where the agent purchases a product matching a user instruction through web interactions such as searching and selecting options [c191].",
+  "judge_reasoning": "The answer identifies ALFWorld and WebShop as the interactive environments, matching the reference. Claims: ALFWorld is a synthetic text-based game aligned with ALFRED, household navigation via text actions (passage 6); WebShop is an online shopping environment with real-world products, purchasing via search/choose options (passage 7); fact verification mentioned as another task besides QA (passage 2). All claims are supported by the retrieved passages. The citation markers (c189 etc.) don't map to passage labels but the content is supported. The answer is consistent with the reference."
+ },
+ {
+  "q": "What is the context window of Llama 3?",
+  "answerable_q": false,
+  "retrieved_gold": false,
+  "model_answerable": false,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5188,
+  "searches": [
+   {
+    "query": "Llama 3 context window"
+   },
+   {
+    "query": "context length tokens maximum sequence length"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The library does not contain the information needed to answer this. None of the retrieved passages mention Llama 3 or state its context window. The closest material is QLoRA's discussion of LLaMA models (e.g., LLaMA 65B and memory footprints at sequence length 512) [c278][c347], which is not the Llama 3 context window, and the Transformer paper's general discussion of sequence length [c17]. No paper in the library covers Llama 3, so its context window cannot be determined from these sources.",
+  "judge_reasoning": "The question is unanswerable from the passages, and the system correctly refused, stating the library lacks Llama 3 information. Its claims are supported: passages mention LLaMA 65B, memory footprints at sequence length 512 (QLoRA), and the Transformer paper discusses sequence length. No outside knowledge is introduced. The citation markers like [c278] don't match the passage numbering, but the substantive claims are grounded. The refusal is correct."
+ },
+ {
+  "q": "How does expert routing work in Mixtral?",
+  "answerable_q": false,
+  "retrieved_gold": false,
+  "model_answerable": false,
+  "faithful": true,
+  "correct": true,
+  "steps": 3,
+  "tokens": 12128,
+  "searches": [
+   {
+    "query": "Mixtral expert routing mixture of experts"
+   },
+   {
+    "query": "gating network top-k expert selection"
+   },
+   {
+    "query": "mixture of experts sparse routing feed-forward layer",
+    "paper": "1706.03762"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The library does not contain material on Mixtral or its expert routing. The five papers available are the Transformer (1706.03762), RAG (2005.11401), LoRA (2106.09685), QLoRA (2305.14314), and ReAct (2210.03629). None describes a mixture-of-experts model or a gating/top-k routing mechanism. The closest content is the Transformer's standard position-wise feed-forward sublayer, which applies two linear transformations with a ReLU between them to every position using the same parameters for all positions [c13]. This is not expert routing. To answer the question, the Mixtral paper or another source describing its routing would need to be added to the library.",
+  "judge_reasoning": "The system refused, correctly stating that the library lacks material on Mixtral. This matches the ground truth that the question cannot be answered from the papers, so correct=true. For faithfulness: the answer's claims about the five papers (Transformer, RAG, LoRA, QLoRA, ReAct) are supported by the retrieved passages and their paper IDs (1706.03762, 2005.11401, 2106.09685, 2305.14314, 2210.03629). The description of the Transformer's position-wise feed-forward sublayer (two linear transformations with ReLU, same across positions) is supported by passage [11]. The citation tag [c13] doesn't match the passage numbering exactly, but this is a minor citation labeling issue, and the content is supported. The claim that none of the papers describes a mixture-of-experts model is consistent with the passages. Overall faithful."
+ },
+ {
+  "q": "What is the loss function of DPO?",
+  "answerable_q": false,
+  "retrieved_gold": false,
+  "model_answerable": false,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5496,
+  "searches": [
+   {
+    "query": "DPO direct preference optimization loss function"
+   },
+   {
+    "query": "preference optimization loss reward model"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The provided library does not contain the DPO (Direct Preference Optimization) paper, so I cannot state its loss function from the sources. The closest material is QLoRA, which trains with cross-entropy loss (supervised learning) without reinforcement learning or RLHF [c325][c304], and it does not describe DPO's objective. To answer this, the DPO paper itself would need to be added to the library.",
+  "judge_reasoning": "The system answer states the library lacks the DPO paper, and that QLoRA trains with cross-entropy loss without RL/RLHF, which is supported by passages [6] and [8]. It does not provide DPO's loss from outside knowledge. The citation tags [c325][c304] are unusual but the claims are supported. Since the question cannot be answered from the papers, refusing is correct."
+ },
+ {
+  "q": "What does the Chinchilla paper say about the optimal ratio of parameters to training tokens?",
+  "answerable_q": false,
+  "retrieved_gold": false,
+  "model_answerable": false,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 5499,
+  "searches": [
+   {
+    "query": "Chinchilla optimal ratio of parameters to training tokens compute-optimal scaling"
+   },
+   {
+    "query": "compute-optimal model size and number of training tokens"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The library does not contain the Chinchilla paper, so I cannot report what it says about the optimal ratio of parameters to training tokens. Searches for compute-optimal scaling, parameter-to-token ratios, and model size versus training tokens returned only passages from LoRA [c110][c95], the Transformer paper [c20][c26], and QLoRA [c282], none of which address this question. To answer, the Chinchilla paper would need to be added to the library.",
+  "judge_reasoning": "The system refused, stating the library lacks the Chinchilla paper and that retrieved passages come only from LoRA, the Transformer paper, and QLoRA. This matches the retrieved passages (papers 2106.09685, 1706.03762, 2305.14314), none of which discuss Chinchilla or compute-optimal ratios. The answer makes no outside factual claims about Chinchilla. The citation tags (e.g., [c110]) don't match the passage numbering, but the substantive claims about which papers were retrieved are supported. Since the question cannot be answered from the papers, refusing is correct."
+ },
+ {
+  "q": "How many parameters does GPT-4 have?",
+  "answerable_q": false,
+  "retrieved_gold": false,
+  "model_answerable": false,
+  "faithful": true,
+  "correct": true,
+  "steps": 2,
+  "tokens": 4839,
+  "searches": [
+   {
+    "query": "GPT-4 number of parameters"
+   },
+   {
+    "query": "GPT-4 model size"
+   }
+  ],
+  "hit_step_limit": false,
+  "answer": "The paper library does not contain information on GPT-4's parameter count. Searches for \"GPT-4 number of parameters\" and \"GPT-4 model size\" returned only passages about GPT-3 175B (used in LoRA experiments [c110]), GPT-2, and QLoRA's use of GPT-4 as an evaluator [c312, c283], none of which state GPT-4's size. Answering would require a source outside this library, such as the GPT-4 technical report.",
+  "judge_reasoning": "The system correctly refuses, stating the library lacks GPT-4's parameter count. Its claims about the retrieved content are supported: passages mention GPT-3 175B in LoRA experiments, GPT-2, and QLoRA using GPT-4 as an evaluator, with none giving GPT-4's size. The mention of the GPT-4 technical report as an outside source is a suggestion, not a factual claim about the passages. The chunk identifiers cited (c110, c312, c283) cannot be verified against the passages shown, but they are minor citation labels and the substantive claims hold. Since the question is unanswerable and the system refused, it is correct."
+ }
+]
