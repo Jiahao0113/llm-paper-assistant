@@ -1,0 +1,27 @@
+{
+ "note": "Hand-written by the assistant from general knowledge of the papers, WITHOUT reading chunk text; gold chunks labeled afterwards by reading candidates. Multiple gold chunks allowed (a hit on any counts).",
+ "answerable": [
+  {"q": "Why is attention scaled before the softmax, and by how much?", "gold": [10, 11]},
+  {"q": "How does the model know the order of words when it has no recurrence or convolution?", "gold": [15]},
+  {"q": "What optimizer and learning rate schedule were used to train the model?", "gold": [22]},
+  {"q": "How does the system decide which documents to fetch for a given input?", "gold": [36, 43]},
+  {"q": "What is the difference between generating from one retrieved document versus mixing documents per token?", "gold": [41, 42]},
+  {"q": "Can the knowledge be refreshed without retraining the model?", "gold": [64, 71]},
+  {"q": "Which attention projections get adapted, and does adapting more of them help?", "gold": [97, 106, 117]},
+  {"q": "Why does the method not slow down inference after deployment?", "gold": [85, 96]},
+  {"q": "How are the two small matrices initialized at the start of training?", "gold": [94, 95]},
+  {"q": "What number format is used for the frozen weights, and why does it suit the weight distribution?", "gold": [281, 292]},
+  {"q": "How do they avoid out-of-memory crashes caused by occasional memory peaks during training?", "gold": [289, 293]},
+  {"q": "How much GPU memory does finetuning a 65B model need before and after the technique?", "gold": [278, 280]},
+  {"q": "What problems of pure step-by-step reasoning does acting in an environment fix?", "gold": [152, 168, 184]},
+  {"q": "What can the agent actually do to look things up on Wikipedia?", "gold": [178]},
+  {"q": "Besides question answering, which interactive environments was the agent tested on?", "gold": [152, 189]}
+ ],
+ "unanswerable": [
+  "What is the context window of Llama 3?",
+  "How does expert routing work in Mixtral?",
+  "What is the loss function of DPO?",
+  "What does the Chinchilla paper say about the optimal ratio of parameters to training tokens?",
+  "How many parameters does GPT-4 have?"
+ ]
+}
