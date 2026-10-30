@@ -46,6 +46,7 @@ TOOLS = [
     {
         "name": "final_answer",
         "description": "Submit the final answer. Call exactly once when done.",
+        "strict": True,  # constrained decoding on the tool input: all required fields guaranteed
         "input_schema": {
             "type": "object",
             "properties": {
@@ -54,6 +55,7 @@ TOOLS = [
                 "citations": {"type": "array", "items": {"type": "integer"}, "description": "Chunk numbers used (12 for c12)"},
             },
             "required": ["answerable", "answer", "citations"],
+            "additionalProperties": False,  # required by strict mode
         },
     },
 ]
