@@ -32,8 +32,7 @@ def build_prompt(question: str, hits) -> str:
     return f"Context passages:\n\n{passages}\n\nQuestion: {question}"
 
 
-def ask(index: DenseIndex, question: str, k: int = 5):
-    hits = index.search(question, k)
+def answer(question: str, hits):
     msg = client.messages.create(
         model=MODEL, max_tokens=600, thinking={"type": "disabled"}, system=SYSTEM,
         messages=[{"role": "user", "content": build_prompt(question, hits)}],
@@ -43,6 +42,10 @@ def ask(index: DenseIndex, question: str, k: int = 5):
     ans = Answer.model_validate_json(text)
     sources = [(n, hits[n - 1][1]) for n in ans.citations if 1 <= n <= len(hits)]
     return ans, sources, msg.usage
+
+
+def ask(index: DenseIndex, question: str, k: int = 5):
+    return answer(question, index.search(question, k))
 
 
 if __name__ == "__main__":
