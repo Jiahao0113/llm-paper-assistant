@@ -10,4 +10,4 @@
 | 5 | Hybrid (BM25 + dense), reranker, query rewriting | `bm25.py`, `rerank.py` (query rewriting TODO) | [~] |
 | 6 | Agent: hand-written ReAct loop, tool use | `src/copilot/agent.py` | [x] |
 | 7 | Agentic RAG, MCP, tracing | v3+ | [ ] |
-| 8 | FastAPI + Docker + README with results | README done; FastAPI and Docker TODO | [~] |
+| 8 | FastAPI + Docker + README with results | `api.py`, `Dockerfile`, README (Docker build untested) | [~] |

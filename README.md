@@ -82,6 +82,22 @@ uv run python -m eval.eval_agent          # agent on the 20 questions, with the 
 uv run python -m eval.ablate_rewrite      # the prompt ablation
 ```
 
+**API.** `uv run uvicorn src.copilot.api:app --port 8000`, then:
+
+```bash
+curl -X POST localhost:8000/ask -H 'content-type: application/json' \
+  -d '{"question": "What number format is used for the frozen weights in QLoRA?"}'
+```
+
+The response has `answerable`, `answer`, `sources` (only passages that were really retrieved, with paper, section and page), the search queries the agent used, steps and token count.
+
+**Docker** (the image holds the code and dependencies; the index and the key are supplied at run time):
+
+```bash
+docker build -t paper-assistant .
+docker run -p 8000:8000 --env-file .env -v "$PWD/data:/app/data" paper-assistant
+```
+
 ## How it was built
 
 Step by step, with notes on each concept (BPE, sampling, tool use, embeddings, chunking, BM25, reranking, LLM-as-judge, agents) in `notes/NOTES.md` and the plan in `ROADMAP.md`.
