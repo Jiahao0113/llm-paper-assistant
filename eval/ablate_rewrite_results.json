@@ -1,0 +1,560 @@
+{
+ "with_hint": [
+  {
+   "q": "Why is attention scaled before the softmax, and by how much?",
+   "queries": [
+    "why scale dot-product attention before softmax, scaling factor",
+    "dot products grow large in magnitude, softmax gradients extremely small"
+   ],
+   "papers": [
+    "1706.03762",
+    "1706.03762"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5737
+  },
+  {
+   "q": "How does the model know the order of words when it has no recurrence or convolution?",
+   "queries": [
+    "positional encoding to inject order information without recurrence or convolution",
+    "sine and cosine functions positional encodings added to input embeddings"
+   ],
+   "papers": [
+    "1706.03762",
+    "1706.03762"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5666
+  },
+  {
+   "q": "What optimizer and learning rate schedule were used to train the model?",
+   "queries": [
+    "optimizer and learning rate schedule used for training",
+    "Adam optimizer warmup learning rate schedule"
+   ],
+   "papers": [
+    null,
+    "1706.03762"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 4474
+  },
+  {
+   "q": "How does the system decide which documents to fetch for a given input?",
+   "queries": [
+    "how are documents retrieved for a given input query",
+    "retriever maximum inner product search top-k documents"
+   ],
+   "papers": [
+    "2005.11401",
+    "2005.11401"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5204
+  },
+  {
+   "q": "What is the difference between generating from one retrieved document versus mixing documents per token?",
+   "queries": [
+    "RAG-Sequence vs RAG-Token generating from one document vs marginalizing per token",
+    "mixture of retrieved documents per token marginalize latent documents"
+   ],
+   "papers": [
+    "2005.11401",
+    "2005.11401"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 4932
+  },
+  {
+   "q": "Can the knowledge be refreshed without retraining the model?",
+   "queries": [
+    "updating knowledge without retraining the model",
+    "non-parametric memory update index without retraining"
+   ],
+   "papers": [
+    null,
+    "2005.11401"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6249
+  },
+  {
+   "q": "Which attention projections get adapted, and does adapting more of them help?",
+   "queries": [
+    "which attention weight matrices to adapt Wq Wk Wv Wo",
+    "adapting more weight types vs rank tradeoff"
+   ],
+   "papers": [
+    "2106.09685",
+    "2106.09685"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6104
+  },
+  {
+   "q": "Why does the method not slow down inference after deployment?",
+   "queries": [
+    "no additional inference latency after deployment",
+    "inference latency adapter deployment merge weights"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5237
+  },
+  {
+   "q": "How are the two small matrices initialized at the start of training?",
+   "queries": [
+    "initialization of low-rank matrices A and B at the start of training"
+   ],
+   "papers": [
+    "2106.09685"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 3818
+  },
+  {
+   "q": "What number format is used for the frozen weights, and why does it suit the weight distribution?",
+   "queries": [
+    "frozen weights quantized data type matches weight distribution",
+    "NormalFloat 4-bit information theoretically optimal normal distribution"
+   ],
+   "papers": [
+    "2305.14314",
+    "2305.14314"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5872
+  },
+  {
+   "q": "How do they avoid out-of-memory crashes caused by occasional memory peaks during training?",
+   "queries": [
+    "avoid out-of-memory memory spikes during training",
+    "memory peaks paged optimizers out of memory errors"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5588
+  },
+  {
+   "q": "How much GPU memory does finetuning a 65B model need before and after the technique?",
+   "queries": [
+    "finetuning 65B model GPU memory requirement",
+    "65B parameter model single 48GB GPU memory reduction"
+   ],
+   "papers": [
+    "2305.14314",
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6274
+  },
+  {
+   "q": "What problems of pure step-by-step reasoning does acting in an environment fix?",
+   "queries": [
+    "problems of pure reasoning chain-of-thought hallucination error propagation acting in environment",
+    "limitations of reasoning without grounding, fact hallucination, lack of external knowledge"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6265
+  },
+  {
+   "q": "What can the agent actually do to look things up on Wikipedia?",
+   "queries": [
+    "Wikipedia API actions search lookup agent",
+    "Search[entity] Lookup[string] Finish action Wikipedia"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6223
+  },
+  {
+   "q": "Besides question answering, which interactive environments was the agent tested on?",
+   "queries": [
+    "interactive environments agent tested on besides question answering",
+    "decision making benchmark environment ALFWorld WebShop"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5882
+  },
+  {
+   "q": "What is the context window of Llama 3?",
+   "queries": [
+    "Llama 3 context window length",
+    "Llama 3 context window"
+   ],
+   "papers": [
+    null,
+    "2305.14314"
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5703
+  },
+  {
+   "q": "How does expert routing work in Mixtral?",
+   "queries": [
+    "Mixtral expert routing mixture of experts",
+    "mixture of experts gating router selects experts"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5663
+  },
+  {
+   "q": "What is the loss function of DPO?",
+   "queries": [
+    "DPO direct preference optimization loss function",
+    "preference optimization reward model human preferences loss"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5651
+  },
+  {
+   "q": "What does the Chinchilla paper say about the optimal ratio of parameters to training tokens?",
+   "queries": [
+    "Chinchilla optimal ratio of model parameters to training tokens compute-optimal scaling"
+   ],
+   "papers": [
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 3897
+  },
+  {
+   "q": "How many parameters does GPT-4 have?",
+   "queries": [
+    "GPT-4 number of parameters",
+    "GPT-4 model size"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 4859
+  }
+ ],
+ "no_hint": [
+  {
+   "q": "Why is attention scaled before the softmax, and by how much?",
+   "queries": [
+    "why scale dot product attention before softmax",
+    "scaled dot-product attention divide by square root of key dimension"
+   ],
+   "papers": [
+    "1706.03762",
+    "1706.03762"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5577
+  },
+  {
+   "q": "How does the model know the order of words when it has no recurrence or convolution?",
+   "queries": [
+    "positional encoding to inject order of tokens without recurrence or convolution",
+    "sine and cosine functions positional encodings"
+   ],
+   "papers": [
+    "1706.03762",
+    "1706.03762"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5702
+  },
+  {
+   "q": "What optimizer and learning rate schedule were used to train the model?",
+   "queries": [
+    "optimizer and learning rate schedule used for training",
+    "Adam optimizer warmup learning rate schedule"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 4708
+  },
+  {
+   "q": "How does the system decide which documents to fetch for a given input?",
+   "queries": [
+    "how are documents retrieved for a given input, retriever scoring",
+    "maximum inner product search top-k documents query encoder"
+   ],
+   "papers": [
+    "2005.11401",
+    "2005.11401"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5105
+  },
+  {
+   "q": "What is the difference between generating from one retrieved document versus mixing documents per token?",
+   "queries": [
+    "RAG-Sequence versus RAG-Token generating from one document vs mixing documents per token",
+    "marginalize over retrieved documents per output token"
+   ],
+   "papers": [
+    "2005.11401",
+    "2005.11401"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 4965
+  },
+  {
+   "q": "Can the knowledge be refreshed without retraining the model?",
+   "queries": [
+    "update knowledge without retraining the model",
+    "non-parametric memory updated knowledge index"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6032
+  },
+  {
+   "q": "Which attention projections get adapted, and does adapting more of them help?",
+   "queries": [
+    "which attention weight matrices to adapt with LoRA",
+    "adapting more weight types vs rank, performance comparison Wq Wv Wk Wo"
+   ],
+   "papers": [
+    "2106.09685",
+    "2106.09685"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5790
+  },
+  {
+   "q": "Why does the method not slow down inference after deployment?",
+   "queries": [
+    "does not slow down inference after deployment",
+    "no additional inference latency after deployment"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 4832
+  },
+  {
+   "q": "How are the two small matrices initialized at the start of training?",
+   "queries": [
+    "initialization of the two low-rank matrices A and B at the start of training"
+   ],
+   "papers": [
+    "2106.09685"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 3682
+  },
+  {
+   "q": "What number format is used for the frozen weights, and why does it suit the weight distribution?",
+   "queries": [
+    "number format for frozen base model weights quantization suits weight distribution",
+    "4-bit NormalFloat data type information-theoretically optimal normal distribution"
+   ],
+   "papers": [
+    "2305.14314",
+    "2305.14314"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6276
+  },
+  {
+   "q": "How do they avoid out-of-memory crashes caused by occasional memory peaks during training?",
+   "queries": [
+    "avoid out-of-memory crashes caused by memory peaks during training",
+    "memory spikes during fine-tuning gradient checkpointing paged optimizers"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5529
+  },
+  {
+   "q": "How much GPU memory does finetuning a 65B model need before and after the technique?",
+   "queries": [
+    "finetuning 65B model GPU memory requirement",
+    "65B parameter model fits on single 48GB GPU"
+   ],
+   "papers": [
+    "2305.14314",
+    null
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6184
+  },
+  {
+   "q": "What problems of pure step-by-step reasoning does acting in an environment fix?",
+   "queries": [
+    "problems of chain-of-thought reasoning hallucination error propagation acting in environment",
+    "reasoning alone limitations fact hallucination grounding external knowledge"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 6348
+  },
+  {
+   "q": "What can the agent actually do to look things up on Wikipedia?",
+   "queries": [
+    "Wikipedia API actions search lookup",
+    "agent actions search[entity] lookup[string] finish"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5779
+  },
+  {
+   "q": "Besides question answering, which interactive environments was the agent tested on?",
+   "queries": [
+    "interactive environments agent tested besides question answering",
+    "decision making benchmark ALFWorld WebShop environments"
+   ],
+   "papers": [
+    "2210.03629",
+    "2210.03629"
+   ],
+   "gold_hit": true,
+   "answerable_q": true,
+   "tokens": 5814
+  },
+  {
+   "q": "What is the context window of Llama 3?",
+   "queries": [
+    "Llama 3 context window",
+    "Llama 3 context length tokens"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5227
+  },
+  {
+   "q": "How does expert routing work in Mixtral?",
+   "queries": [
+    "Mixtral expert routing mixture of experts",
+    "mixture of experts gating router top-k experts"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5088
+  },
+  {
+   "q": "What is the loss function of DPO?",
+   "queries": [
+    "DPO direct preference optimization loss function",
+    "preference optimization loss"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5785
+  },
+  {
+   "q": "What does the Chinchilla paper say about the optimal ratio of parameters to training tokens?",
+   "queries": [
+    "Chinchilla optimal ratio of parameters to training tokens",
+    "compute-optimal scaling of model size and number of training tokens"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 5055
+  },
+  {
+   "q": "How many parameters does GPT-4 have?",
+   "queries": [
+    "GPT-4 number of parameters",
+    "GPT-4 model size"
+   ],
+   "papers": [
+    null,
+    null
+   ],
+   "gold_hit": false,
+   "answerable_q": false,
+   "tokens": 4792
+  }
+ ]
+}

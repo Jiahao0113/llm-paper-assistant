@@ -213,5 +213,24 @@ Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.p
 ### Agent (`src/copilot/agent.py`)
 - Agent = LLM + tools + loop + stop condition; control flow is decided by the model instead of a fixed pipeline. Tools: `search_papers(query, paper?)` (hybrid + rerank) and `final_answer(...)`. Max-step cap with a forced final answer.
 - Agent vs fixed RAG: more capable (rephrases queries, restricts to a paper, splits comparisons) but ~3x tokens, less predictable, harder to debug.
-- Tool arguments are **not guaranteed** to follow the schema (a run crashed with `KeyError: 'citations'`); validate tool inputs, unlike constrained-decoding structured output.
+- Tool arguments are **not guaranteed** to follow the schema unless the tool is `strict` (a run crashed with `KeyError: 'citations'`); see Strict tool use below. Validate tool inputs otherwise.
 - Results on 20 questions, 3 runs: all 15 answerable questions answered correctly (RAG: 13/15), wrongly refused 0 (RAG: 1-2), unanswerable refused 5/5 in every run. Cost: ~2 searches/question, ~5.5-6k input tokens vs ~1.5-2k for RAG. Caveats: the agent sees more chunks than top-5; the set is small and was used while developing; agent queries benefit from the model's prior knowledge of the domain.
+
+### Strict tool use
+- `"strict": true` on a tool turns on **constrained decoding for the tool input**, the same mechanism as structured output: invalid tokens are masked (logit -> -inf), so required fields and types are guaranteed. It needs `additionalProperties: false`. We enabled it on `final_answer` after the `KeyError: 'citations'` crash. Without it, tool input is only "usually" valid, so validate it.
+
+### How the agent rewrites queries
+- There is no separate rewrite module. The `query` argument of `search_papers` is text the model generates (next-token prediction), like any other output. The user question is just context.
+- Rewriting is adaptive: the previous search's results come back as an **observation** in `messages`, so the model can see the miss and write a better query (e.g. `NF4`, `normal float`, `information theoretically optimal`). It also uses its pretraining knowledge of the papers, which is a confounder; private documents would weaken this.
+- Dedicated alternatives (one-shot, before retrieval): **query rewriting**, **multi-query**, **HyDE** (retrieve with a hypothetical answer), **query decomposition**. They are predictable and cheap; the agent version is flexible but costs steps and tokens and is not guaranteed to happen.
+
+### Ablation: does the "rephrase" sentence matter? (`eval/ablate_rewrite.py`)
+- **Ablation** = remove one component, measure the change. Prediction: without "rephrase the query, use technical terms", the agent searches less and rewrites less. **Result: no visible change.**
+
+| | avg searches | questions with >1 search | consecutive-query Jaccard | gold retrieved | avg tokens |
+|---|---|---|---|---|---|
+| with hint | 1.90 | 18/20 | 0.20 | 15/15 | 5465 |
+| no hint | 1.95 | 19/20 | 0.20 | 15/15 | 5414 |
+
+- Rewriting seems to come mostly from the model, not that sentence. Likely driven by the observation of the first search, but the experiment does not separate that from prior knowledge.
+- Caveats: n=20, one run per condition (a 0.05 difference is noise); the tool description and "Be efficient" still nudge the model; only behaviour was measured, not quality (gold is 15/15 in both, so the set cannot discriminate); the papers are famous. "No effect detected" is not "no effect".
