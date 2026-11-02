@@ -6,6 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from .ingest import Chunk, chunk_paper
+from .papers import load_papers
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 CACHE = Path("data/index")
@@ -18,8 +19,9 @@ class DenseIndex:
         self.matrix: np.ndarray | None = None
 
     def build(self, pdf_dir="data/raw"):
-        for pdf in sorted(Path(pdf_dir).glob("*.pdf")):
-            self.chunks += chunk_paper(pdf)
+        # Manifest order, not alphabetical: new papers are appended, so existing chunk ids (the eval gold labels) never shift.
+        for paper_id in load_papers():
+            self.chunks += chunk_paper(Path(pdf_dir) / f"{paper_id}.pdf")
         # Prepend the section name so an isolated paragraph carries some context.
         texts = [f"{c.section}. {c.text}" for c in self.chunks]
         self.matrix = self.model.encode(texts, normalize_embeddings=True, batch_size=32)

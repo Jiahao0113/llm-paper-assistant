@@ -1,0 +1,238 @@
+[
+ {
+  "id": "1706.03762",
+  "title": "Attention Is All You Need"
+ },
+ {
+  "id": "2005.11401",
+  "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+ },
+ {
+  "id": "2106.09685",
+  "title": "LoRA: Low-Rank Adaptation of Large Language Models"
+ },
+ {
+  "id": "2210.03629",
+  "title": "ReAct: Synergizing Reasoning and Acting in Language Models"
+ },
+ {
+  "id": "2305.14314",
+  "title": "QLoRA: Efficient Finetuning of Quantized LLMs"
+ },
+ {
+  "id": "1810.04805",
+  "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+ },
+ {
+  "id": "1910.10683",
+  "title": "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer"
+ },
+ {
+  "id": "2005.14165",
+  "title": "Language Models are Few-Shot Learners"
+ },
+ {
+  "id": "2302.13971",
+  "title": "LLaMA: Open and Efficient Foundation Language Models"
+ },
+ {
+  "id": "2307.09288",
+  "title": "Llama 2: Open Foundation and Fine-Tuned Chat Models"
+ },
+ {
+  "id": "2001.08361",
+  "title": "Scaling Laws for Neural Language Models"
+ },
+ {
+  "id": "2203.02155",
+  "title": "Training language models to follow instructions with human feedback"
+ },
+ {
+  "id": "2201.11903",
+  "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"
+ },
+ {
+  "id": "2203.11171",
+  "title": "Self-Consistency Improves Chain of Thought Reasoning in Language Models"
+ },
+ {
+  "id": "2302.04761",
+  "title": "Toolformer: Language Models Can Teach Themselves to Use Tools"
+ },
+ {
+  "id": "2303.11366",
+  "title": "Reflexion: Language Agents with Verbal Reinforcement Learning"
+ },
+ {
+  "id": "2305.10601",
+  "title": "Tree of Thoughts: Deliberate Problem Solving with Large Language Models"
+ },
+ {
+  "id": "2310.11511",
+  "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection"
+ },
+ {
+  "id": "2212.10496",
+  "title": "Precise Zero-Shot Dense Retrieval without Relevance Labels"
+ },
+ {
+  "id": "2004.04906",
+  "title": "Dense Passage Retrieval for Open-Domain Question Answering"
+ },
+ {
+  "id": "2002.08909",
+  "title": "REALM: Retrieval-Augmented Language Model Pre-Training"
+ },
+ {
+  "id": "2208.03299",
+  "title": "Atlas: Few-shot Learning with Retrieval Augmented Language Models"
+ },
+ {
+  "id": "2007.01282",
+  "title": "Leveraging Passage Retrieval with Generative Models for Open Domain Question Answering"
+ },
+ {
+  "id": "2004.12832",
+  "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT"
+ },
+ {
+  "id": "1908.10084",
+  "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
+ },
+ {
+  "id": "2205.14135",
+  "title": "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness"
+ },
+ {
+  "id": "2307.08691",
+  "title": "FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning"
+ },
+ {
+  "id": "2310.06825",
+  "title": "Mistral 7B"
+ },
+ {
+  "id": "2104.09864",
+  "title": "RoFormer: Enhanced Transformer with Rotary Position Embedding"
+ },
+ {
+  "id": "2305.13245",
+  "title": "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints"
+ },
+ {
+  "id": "2309.06180",
+  "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+ },
+ {
+  "id": "2310.08560",
+  "title": "MemGPT: Towards LLMs as Operating Systems"
+ },
+ {
+  "id": "2304.03442",
+  "title": "Generative Agents: Interactive Simulacra of Human Behavior"
+ },
+ {
+  "id": "2308.08155",
+  "title": "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation"
+ },
+ {
+  "id": "2303.17580",
+  "title": "HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face"
+ },
+ {
+  "id": "2310.06770",
+  "title": "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"
+ },
+ {
+  "id": "2307.03172",
+  "title": "Lost in the Middle: How Language Models Use Long Contexts"
+ },
+ {
+  "id": "2309.15217",
+  "title": "Ragas: Automated Evaluation of Retrieval Augmented Generation"
+ },
+ {
+  "id": "2306.05685",
+  "title": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"
+ },
+ {
+  "id": "2109.01652",
+  "title": "Finetuned Language Models Are Zero-Shot Learners"
+ },
+ {
+  "id": "2210.11416",
+  "title": "Scaling Instruction-Finetuned Language Models"
+ },
+ {
+  "id": "2204.02311",
+  "title": "PaLM: Scaling Language Modeling with Pathways"
+ },
+ {
+  "id": "2112.04426",
+  "title": "Improving language models by retrieving from trillions of tokens"
+ },
+ {
+  "id": "2212.08073",
+  "title": "Constitutional AI: Harmlessness from AI Feedback"
+ },
+ {
+  "id": "2204.05862",
+  "title": "Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback"
+ },
+ {
+  "id": "2305.11206",
+  "title": "LIMA: Less Is More for Alignment"
+ },
+ {
+  "id": "2210.17323",
+  "title": "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers"
+ },
+ {
+  "id": "2306.00978",
+  "title": "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration"
+ },
+ {
+  "id": "2208.07339",
+  "title": "LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale"
+ },
+ {
+  "id": "2101.00190",
+  "title": "Prefix-Tuning: Optimizing Continuous Prompts for Generation"
+ },
+ {
+  "id": "2104.08691",
+  "title": "The Power of Scale for Parameter-Efficient Prompt Tuning"
+ },
+ {
+  "id": "1902.00751",
+  "title": "Parameter-Efficient Transfer Learning for NLP"
+ },
+ {
+  "id": "2312.10997",
+  "title": "Retrieval-Augmented Generation for Large Language Models: A Survey"
+ },
+ {
+  "id": "2401.18059",
+  "title": "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval"
+ },
+ {
+  "id": "2312.00752",
+  "title": "Mamba: Linear-Time Sequence Modeling with Selective State Spaces"
+ },
+ {
+  "id": "1910.13461",
+  "title": "BART: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension"
+ },
+ {
+  "id": "1907.11692",
+  "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach"
+ },
+ {
+  "id": "2112.09332",
+  "title": "WebGPT: Browser-assisted question-answering with human feedback"
+ },
+ {
+  "id": "2308.03688",
+  "title": "AgentBench: Evaluating LLMs as Agents"
+ }
+]

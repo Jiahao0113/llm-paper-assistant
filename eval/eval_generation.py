@@ -51,12 +51,13 @@ def judge(question, hits, ans, gold_chunks):
         reference = "This question CANNOT be answered from the papers."
         rule = "true only if the system refused / said the information is missing."
     msg = client.messages.create(
-        model=JUDGE_MODEL, max_tokens=500, thinking={"type": "between_tools"},  # this model rejects "disabled"; the schema has its own reasoning field
+        model=JUDGE_MODEL, max_tokens=1500, thinking={"type": "between_tools"},  # this model rejects "disabled"; the schema has its own reasoning field
         messages=[{"role": "user", "content": JUDGE_PROMPT.format(
             question=question, retrieved=numbered(chunks), reference=reference,
             flag=ans.answerable, ans=ans.answer, correct_rule=rule)}],
         output_config={"format": {"type": "json_schema", "schema": Verdict.model_json_schema()}},
     )
+    assert msg.stop_reason != "max_tokens", "judge output truncated: raise max_tokens"
     return Verdict.model_validate_json("".join(b.text for b in msg.content if b.type == "text"))
 
 

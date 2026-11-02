@@ -11,3 +11,5 @@
 | 6 | Agent: hand-written ReAct loop, tool use | `src/copilot/agent.py` | [x] |
 | 7 | Agentic RAG, MCP, tracing | v3+ | [ ] |
 | 8 | FastAPI + Docker + README with results | `api.py`, `Dockerfile`, README (Docker build untested) | [~] |
+
+Library: scaled from 5 to 59 papers (`data/papers.json`); evaluation re-run, see README.

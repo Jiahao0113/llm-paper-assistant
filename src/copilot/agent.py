@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from dotenv import load_dotenv
 import anthropic
 
+from .papers import load_papers
 from .pipeline import Retriever
 
 load_dotenv()
@@ -11,13 +12,7 @@ client = anthropic.Anthropic()
 MODEL = "claude-haiku-5-5"
 MAX_STEPS = 6
 
-PAPERS = {
-    "1706.03762": "Attention Is All You Need (Transformer)",
-    "2005.11401": "Retrieval-Augmented Generation (RAG)",
-    "2106.09685": "LoRA",
-    "2305.14314": "QLoRA",
-    "2210.03629": "ReAct",
-}
+PAPERS = load_papers()  # id -> title, from data/papers.json
 
 SYSTEM = f"""You are a research assistant answering questions using a small library of ML papers:
 {chr(10).join(f'- {k}: {v}' for k, v in PAPERS.items())}

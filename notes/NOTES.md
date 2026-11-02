@@ -234,3 +234,13 @@ Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.p
 
 - Rewriting seems to come mostly from the model, not that sentence. Likely driven by the observation of the first search, but the experiment does not separate that from prior knowledge.
 - Caveats: n=20, one run per condition (a 0.05 difference is noise); the tool description and "Be efficient" still nudge the model; only behaviour was measured, not quality (gold is 15/15 in both, so the set cannot discriminate); the papers are famous. "No effect detected" is not "no effect".
+
+---
+
+## 8. Scaling the library from 5 to 59 papers
+
+- **Stable ids matter.** Gold labels were chunk indices. Adding papers in alphabetical order would shift every index and silently invalidate the labels. Fix: build in manifest order (original five first, in their old order) and verify the first 348 chunks are identical to the old index. The check caught a real mistake: I had listed two of the five papers in the wrong order.
+- **More distractors => every retriever degrades** (recall@5 hybrid 0.933 -> 0.833; dense most, BM25 least). The reranker still helped everywhere. This is the realistic setting a RAG system faces; 5 papers was easy mode.
+- **Gold labels can go stale.** A question written for a small library can be legitimately answered by new documents; recall then undercounts. Labels need re-validation when the corpus changes. The same applies to "unanswerable" questions: I excluded papers that would answer them.
+- **Prompt cost scales with library size** when the paper list sits in the system prompt (input tokens ~5.5k -> ~10.7k per question). Prompt caching would cut the repeated part.
+- **Evaluation bug found again:** the judge's `max_tokens=500` truncated its JSON once answers got longer. Now 1500, plus an assertion on `stop_reason`.
