@@ -1,0 +1,201 @@
+{
+ "note": "Written for the 59-paper library. gold = list of {paper, phrase}: a retrieved chunk counts if it is from that paper and contains the phrase. Cross-paper questions need ALL gold papers covered.",
+ "answerable": [
+  {
+   "type": "single",
+   "q": "How does the method decide whether retrieval is even needed for a given input, instead of always fetching passages?",
+   "gold": [
+    {
+     "paper": "2310.11511",
+     "phrase": "reflection tokens"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "Why do models do worse when the relevant fact sits in the middle of a long prompt than at the start or end?",
+   "gold": [
+    {
+     "paper": "2307.03172",
+     "phrase": "U-shaped"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How can the memory holding cached attention keys and values be allocated in non-contiguous pieces to avoid waste?",
+   "gold": [
+    {
+     "paper": "2309.06180",
+     "phrase": "virtual memory"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How is a query scored against a passage when every token keeps its own vector?",
+   "gold": [
+    {
+     "paper": "2004.12832",
+     "phrase": "MaxSim"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "Why is exact attention faster when it reads and writes less, even though it does not do fewer arithmetic operations?",
+   "gold": [
+    {
+     "paper": "2205.14135",
+     "phrase": "tiling"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "What does generating a fake answer first, instead of embedding the question, buy you for retrieval without relevance labels?",
+   "gold": [
+    {
+     "paper": "2212.10496",
+     "phrase": "hypothetical"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How are human comparisons between outputs turned into a training signal for following instructions?",
+   "gold": [
+    {
+     "paper": "2203.02155",
+     "phrase": "ranking"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "Which technique encodes position by rotating query and key vectors, and what does that do to the dependence on relative distance?",
+   "gold": [
+    {
+     "paper": "2104.09864",
+     "phrase": "rotation"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How does a language model learn on its own which external API calls are actually useful?",
+   "gold": [
+    {
+     "paper": "2302.04761",
+     "phrase": "self-supervised"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "What bias appears when a judge model sees two answers and tends to favour the one shown in a certain slot?",
+   "gold": [
+    {
+     "paper": "2306.05685",
+     "phrase": "position bias"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How are summaries at several levels of a tree used when answering a question?",
+   "gold": [
+    {
+     "paper": "2401.18059",
+     "phrase": "clustering"
+    }
+   ]
+  },
+  {
+   "type": "single",
+   "q": "How can a sequence model avoid quadratic cost in sequence length yet still choose what to remember depending on the input?",
+   "gold": [
+    {
+     "paper": "2312.00752",
+     "phrase": "selective state space"
+    }
+   ]
+  },
+  {
+   "type": "cross",
+   "q": "How do the 4-bit and 3-bit post-training weight quantization methods differ in how they decide which weights need extra care?",
+   "gold": [
+    {
+     "paper": "2210.17323",
+     "phrase": "Hessian"
+    },
+    {
+     "paper": "2306.00978",
+     "phrase": "salient"
+    }
+   ]
+  },
+  {
+   "type": "cross",
+   "q": "How do the original retrieval-augmented generator and the self-reflective variant differ in when and how retrieved text is used?",
+   "gold": [
+    {
+     "paper": "2005.11401",
+     "phrase": "RAG-Sequence"
+    },
+    {
+     "paper": "2310.11511",
+     "phrase": "reflection tokens"
+    }
+   ]
+  },
+  {
+   "type": "cross",
+   "q": "Which parameter-efficient methods insert trainable parameters inside the network, and which only change the input side?",
+   "gold": [
+    {
+     "paper": "1902.00751",
+     "phrase": "bottleneck"
+    },
+    {
+     "paper": "2104.08691",
+     "phrase": "soft prompt"
+    }
+   ]
+  },
+  {
+   "type": "cross",
+   "q": "How do the two language-agent methods that interleave acting with reasoning each make use of feedback from the environment?",
+   "gold": [
+    {
+     "paper": "2210.03629",
+     "phrase": "interleav"
+    },
+    {
+     "paper": "2303.11366",
+     "phrase": "verbal"
+    }
+   ]
+  },
+  {
+   "type": "cross",
+   "q": "How does representing a passage with one vector differ from keeping a vector per token, in the two retrieval models built on BERT?",
+   "gold": [
+    {
+     "paper": "2004.04906",
+     "phrase": "dot product"
+    },
+    {
+     "paper": "2004.12832",
+     "phrase": "MaxSim"
+    }
+   ]
+  }
+ ],
+ "unanswerable": [
+  "How does the Muon optimizer differ from Adam in its update rule?",
+  "How does Mamba-2 relate state space models to attention through structured duality?",
+  "What is the reported MMLU score of Gemini Ultra?",
+  "How does the Llama 3 post-training pipeline mitigate reward hacking?"
+ ]
+}

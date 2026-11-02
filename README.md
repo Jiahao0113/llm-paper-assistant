@@ -64,14 +64,35 @@ The reranker helps in all four settings. The hand-written drop at 59 papers is p
 
 The agent answers more questions correctly at roughly three times the token cost, and about twice that again with the larger library (59 titles in the system prompt and tool schema, plus longer results; I did not isolate which contributes how much). The model is not deterministic, so numbers vary between runs; a one-question difference on n=20 is noise.
 
+**A harder set written for the 59-paper library** (`eval/retrieval_set_v3.json`: 12 single-paper questions on the new papers, 5 questions that need two papers, 4 unanswerable). Gold is "paper id + a phrase that must appear in a retrieved chunk", so it does not depend on chunk indices. This also controls the earlier confound: fixed RAG is run with top-5 and top-10, the agent sees about 10.
+
+| Type | System | All gold retrieved | Judged correct | Faithful | Refused | Input tokens |
+|---|---|---|---|---|---|---|
+| single (n=12) | RAG top-5 | 10/12 | 9/12 | 11/12 | 2 | 2.5k |
+| | RAG top-10 | 11/12 | 11/12 | 12/12 | 1 | 4.5k |
+| | Agent | 11/12 | 12/12 | 12/12 | 0 | 10.2k |
+| cross-paper (n=5) | RAG top-5 | 0/5 | 2/5 | 4/5 | 2 | 2.6k |
+| | RAG top-10 | 1/5 | 4/5 | 5/5 | 1 | 4.5k |
+| | Agent | 4/5 | 5/5 | 4/5 | 0 | 11.0k |
+| unanswerable (n=4) | RAG top-5 | - | 4/4 | 4/4 | 4 | 2.2k |
+| | RAG top-10 | - | 4/4 | 4/4 | 4 | 3.9k |
+| | Agent | - | 4/4 | 4/4 | 3 | 10.3k |
+
+What this says, with n this small (one question is 8% on the single-paper rows, 20% on the cross-paper rows):
+- Most of the earlier "agent beats RAG" gap is explained by seeing more passages: going from top-5 to top-10 fixes about as many questions as switching to the agent (single-paper 9 -> 11 -> 12 correct). The agent is one question ahead of top-10 RAG at 2-2.5x the tokens, which I cannot distinguish from noise.
+- The one place the agent clearly retrieves better is questions that need two papers: it finds both papers' evidence in 4 of 5 cases, top-10 RAG in 1 of 5. Its multi-search behaviour matters there; I would want more than 5 such questions before claiming it.
+- "Judged correct" is looser than "all gold retrieved" on cross-paper questions: the judge accepts an answer that is consistent with the reference and on topic, even when it did not retrieve both papers. Treat the gold-coverage column as the stricter measure.
+
 **Ablation: does the "rephrase the query" prompt sentence matter?** I predicted it would. Removing it changed almost nothing (1.90 vs 1.95 searches per question, same gold recall), so query rewriting comes mostly from the model and the search results, not from that sentence. One run per condition; this means "no effect detected", not "no effect". See `eval/ablate_rewrite.py`.
 
 ## Limitations
 
 - **Small, biased test sets.** 60 synthetic questions with lexical leakage and 15 hand-written ones written by one person. More questions would not remove that bias.
-- **The agent was developed against the same 20 questions it is evaluated on.** There is no held-out set, so its numbers are optimistic.
-- **The agent-versus-RAG comparison is confounded.** The agent sees more chunks (about 10 across two searches) than fixed RAG sees (5). It also benefits from the model's prior knowledge of these famous papers; private documents may behave differently.
+- **Small sets, written by one author.** The v3 set has 21 questions; a single question swings a row by 8-20%. The agent was developed against the 20 older questions, not against v3, but v3 is still too small to rank systems with confidence. I replaced one v3 "unanswerable" question after seeing a result, because it was mislabelled (the GQA paper does mention speculative sampling, so the system was right to answer); the replacement was checked against the corpus first.
+- **The agent-versus-RAG comparison is only partly controlled.** On v3 I added a top-10 RAG baseline, which closes most of the gap (see above); the older 20-question comparison still pits the agent against top-5 only. The model also knows these famous papers from pretraining, so results on private documents may differ.
 - **Citation accuracy is not measured.** The judge sees passages numbered `[1]..[5]`, while the agent cites chunk ids like `c278`, so the judge cannot check the citations. It flagged this in its reasoning.
+- **Structured flag and text can disagree.** On one unanswerable question the agent wrote "the library does not contain the Llama 3 paper" and then described Llama 2, while setting `answerable=true`. The judge graded the text.
+- **One unexplained crash.** An agent run once failed with a missing `answer` field in the `final_answer` call despite `strict` mode. I suspect truncation at `max_tokens=1200` but did not confirm it; I raised the limit to 2500 and made truncation raise an explicit error. It did not recur in the rerun.
 - **The judge is imperfect.** I read its reasoning and found real bugs in the evaluation (truncated passages, missing metadata), which I fixed; I did not validate it against a second human labeller.
 - **One over-generalisation seen:** on an ambiguous question ("What optimizer ... was used to train the model?") the agent answered for three papers and described one loosely; the judge marked it unfaithful.
 - **Hand-written gold labels are not valid for a bigger library.** Questions like "What optimizer was used to train the model?" or "How does the system decide which documents to fetch?" were written when only five papers existed. With 59, other papers (DPR, Atlas, REALM, ...) may answer them correctly, but they count as misses. Part of the recall drop at 59 papers is therefore false negatives in the labels (likely; I did not read each case). The end-to-end agent numbers are not affected the same way because the judge reads the answer, not the chunk id.

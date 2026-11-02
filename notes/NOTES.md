@@ -244,3 +244,12 @@ Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.p
 - **Gold labels can go stale.** A question written for a small library can be legitimately answered by new documents; recall then undercounts. Labels need re-validation when the corpus changes. The same applies to "unanswerable" questions: I excluded papers that would answer them.
 - **Prompt cost scales with library size** when the paper list sits in the system prompt (input tokens ~5.5k -> ~10.7k per question). Prompt caching would cut the repeated part.
 - **Evaluation bug found again:** the judge's `max_tokens=500` truncated its JSON once answers got longer. Now 1500, plus an assertion on `stop_reason`.
+
+## 9. A harder test set, and what a fair baseline does to a result
+
+- **Gold as (paper, phrase)** instead of a chunk index: robust to re-chunking and to adding papers. Check each phrase exists in the corpus, and keep it specific (a phrase present in 40 chunks of a paper is a loose label).
+- **Mislabelled "unanswerable" question:** "How does speculative decoding work?" looked out of scope, but one library paper (GQA) mentions it; all three systems answered, and were right. Lesson: verify unanswerable questions by searching the corpus, not by intuition.
+- **Fair baseline changes the story.** The earlier claim "agent beats RAG" compared an agent that sees ~10 chunks with RAG that sees 5. With RAG top-10, the gap shrinks to about one question (single-paper correct: 9 -> 11 -> 12 for RAG-5, RAG-10, agent). The result that remains: on questions needing two papers, the agent retrieves both papers' evidence far more often (4/5 vs 1/5) because it can search once per paper. Always ask: what is the strongest simple baseline?
+- **Two metrics, different strictness:** "all gold retrieved" is strict; the LLM judge's `correct` is lenient on multi-part questions. Report both.
+- **Structured fields vs free text can disagree** (`answerable=true` while the text refuses). Decide which one is the source of truth.
+- **Failure handling:** a tool call truncated by `max_tokens` has an incomplete input. Check `stop_reason` and fail loudly.
