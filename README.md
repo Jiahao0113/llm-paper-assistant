@@ -85,6 +85,16 @@ What this says, with n this small (one question is 8% on the single-paper rows, 
 
 **Ablation: does the "rephrase the query" prompt sentence matter?** I predicted it would. Removing it changed almost nothing (1.90 vs 1.95 searches per question, same gold recall), so query rewriting comes mostly from the model and the search results, not from that sentence. One run per condition; this means "no effect detected", not "no effect". See `eval/ablate_rewrite.py`.
 
+**Vector database (Chroma / HNSW) vs numpy brute force.** The dense stage can run on either (`Retriever(dense_backend="numpy" | "chroma")`; the embeddings are loaded into Chroma without re-encoding). On the 60-question set the two give identical end-to-end results (recall@5 0.900, recall@1 0.733); the approximate search returned 99.7% of the exact top-10 and 96.1% of the exact top-100. At 4,645 vectors latency is the same (~10 ms, almost all of it query encoding), so the database brings no benefit at this size. To see where it would, `eval/ann_scaling.py` measures single-query search time on real embeddings plus noise (realistic cluster structure):
+
+| Vectors | Exact (numpy) | HNSW ef=50 | HNSW recall@10 | HNSW build |
+|---|---|---|---|---|
+| 5,000 | 0.08 ms | 0.20 ms | 0.987 | 0.3 s |
+| 50,000 | 0.91 ms | 0.27 ms | 1.000 | 5.7 s |
+| 500,000 | 9.28 ms | 0.26 ms | 0.990 | 66.8 s |
+
+Brute force grows linearly with the number of vectors, HNSW barely moves, at a recall cost that `ef` tunes (ef=20: 0.95 at 500k; ef=200: 1.000 but 0.59 ms). Below roughly 10k vectors, exact search is faster. A first run on purely random vectors gave HNSW recall of 0.02 at 500k: random vectors in 384 dimensions are almost equidistant, which is the worst case for ANN, so those numbers say nothing about text embeddings. The scaling data is synthetic (noise added to real embeddings), not a measurement of real 500k-chunk corpora.
+
 ## Limitations
 
 - **Small, biased test sets.** 60 synthetic questions with lexical leakage and 15 hand-written ones written by one person. More questions would not remove that bias.

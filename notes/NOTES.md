@@ -253,3 +253,11 @@ Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.p
 - **Two metrics, different strictness:** "all gold retrieved" is strict; the LLM judge's `correct` is lenient on multi-part questions. Report both.
 - **Structured fields vs free text can disagree** (`answerable=true` while the text refuses). Decide which one is the source of truth.
 - **Failure handling:** a tool call truncated by `max_tokens` has an incomplete input. Check `stop_reason` and fail loudly.
+
+## 10. Vector databases and ANN
+
+- **Exact kNN** costs O(N x d) per query (one dot product with every vector). Fine up to ~10k vectors; at 500k it was 9 ms/query in our test and keeps growing linearly. Tree indexes (KD-tree) stop helping in hundreds of dimensions (curse of dimensionality), so large systems use **ANN (approximate nearest neighbor)**: give up a little recall for sublinear search time.
+- **HNSW** (Hierarchical Navigable Small World): vectors are nodes in a graph linked to near neighbors. Search = greedy walk toward the query, keeping a candidate list of size `ef`; upper layers are sparse with long links (coarse jumps, like a skip list), lower layers are dense. Knobs: `M` (links per node), `ef_construction`, `ef_search` (bigger = higher recall, slower). Costs: memory for the graph, slow build (67 s for 500k), updates/deletes are awkward.
+- Other ANN families: **IVF** (cluster vectors, search only the nearest clusters), **PQ** (compress vectors into short codes), **LSH** (hash similar vectors into the same bucket); real systems combine them.
+- **Vector database** = ANN index + persistence + metadata filtering + CRUD + (often) a server and scaling. FAISS is a library, not a database.
+- Experiment lessons: at 4.6k vectors the database changed nothing (same recall, same latency); HNSW was *slower* than numpy below ~10k vectors. And a benchmark on pure random vectors gave recall 0.02, because random high-dimensional vectors have no neighbor structure: a bad benchmark can mislead as much as a bad system. Check recall before trusting a latency number.

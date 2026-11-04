@@ -4,18 +4,24 @@ import numpy as np
 from .bm25 import BM25, rrf
 from .rerank import rerank
 from .retrieval import DenseIndex
+from .vectorstore import ChromaDense
 
 
 class Retriever:
-    def __init__(self, top_n: int = 30):
+    def __init__(self, top_n: int = 30, dense_backend: str = "numpy"):
         self.idx = DenseIndex()
         self.idx.load()
+        self.backend = dense_backend  # "numpy" = exact brute force, "chroma" = vector database (HNSW, approximate)
+        self.chroma = ChromaDense() if dense_backend == "chroma" else None
         self.top_n = top_n
         self.texts = [f"{c.section}. {c.text}" for c in self.idx.chunks]  # same text we embedded
         self.bm25 = BM25(self.texts)
 
     def _dense(self, q):
-        return list(np.argsort(self.idx.matrix @ self.idx.model.encode(q, normalize_embeddings=True))[::-1])
+        qv = self.idx.model.encode(q, normalize_embeddings=True)
+        if self.chroma:
+            return self.chroma.search_ids(qv, 100)  # only the top 100 are used downstream
+        return list(np.argsort(self.idx.matrix @ qv)[::-1])
 
     def _bm25(self, q):
         return list(np.argsort(self.bm25.scores(q))[::-1])
