@@ -211,7 +211,7 @@ curl -X POST localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "What number format is used for the frozen weights in QLoRA?"}'
 ```
 
-`POST /research` with `{"task": "...", "system": "staged"}` returns the brief, its sources, cost, calls and a trace of the steps. Deploying to AWS Lambda is described in `docs/DEPLOY.md`.
+`POST /research` with `{"task": "...", "system": "staged"}` returns the brief, its sources, cost, calls and a trace of the steps. Deploying to AWS Lambda is described in `docs/DEPLOY.md`; a step-by-step plan covering Lambda and SageMaker, with checkpoints, troubleshooting and cleanup, is in `docs/DEPLOYMENT_PLAN.md` (planned, not yet executed).
 
 The `/ask` response has `answerable`, `answer`, `sources` (only passages that were really retrieved, with paper, section and page), the search queries the agent used, steps and token count.
 

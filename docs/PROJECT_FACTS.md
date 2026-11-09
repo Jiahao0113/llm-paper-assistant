@@ -39,6 +39,10 @@ A research agent over a library of 59 arXiv papers (LLMs, RAG, agents, fine-tuni
 
 A thread-safety hang when running retrieval concurrently (fixed with a lock; it would also have hit the first API version); judge output truncated by a token limit; briefs truncated by output limits (checked `stop_reason`); a manifest ordering mistake that would have silently invalidated all older gold labels (caught by an id-stability check, now a test); a mislabelled "unanswerable" test question; a first ANN benchmark on random vectors that gave misleading recall; an evaluation metric that mixed citation coverage and citation accuracy until it was decomposed.
 
+## Deployment status
+
+A detailed step-by-step plan for deploying to AWS Lambda and SageMaker exists in `docs/DEPLOYMENT_PLAN.md`. It is a plan: none of it has been executed, so none of it may be described as done. The plan states exactly which claims become true after each phase.
+
 ## Honest limitations (also in the README)
 
 Small test sets written by one person; one LLM judge; the judge's strictness is set by the author; the pipeline's own verifier over-flags; one design choice (one repair round) was made after seeing the evaluation data; support rates are on the judge's reading.

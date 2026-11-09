@@ -1,6 +1,6 @@
 # Deploying to AWS
 
-**Status: written but not deployed.** The image and template have not been built or deployed from this repository's author environment (no Docker or AWS credentials there). The CI workflow builds the image on every push to `main`; treat the first `sam deploy` as the real test and expect to fix small things.
+**Status: written but not deployed.** The step-by-step version of this, with checkpoints and cleanup, is `docs/DEPLOYMENT_PLAN.md`. The image and template have not been built or deployed from this repository's author environment (no Docker or AWS credentials there). The CI workflow builds the image on every push to `main`; treat the first `sam deploy` as the real test and expect to fix small things.
 
 ## What gets created
 
