@@ -9,7 +9,7 @@
 | 4 | Evaluation: test set, recall@k, faithfulness | `eval/` (retrieval baseline done; generation eval TODO) | [~] |
 | 5 | Hybrid (BM25 + dense), reranker, query rewriting | `bm25.py`, `rerank.py` (query rewriting TODO) | [~] |
 | 6 | Agent: hand-written ReAct loop, tool use | `src/copilot/agent.py` | [x] |
-| 7 | Agentic RAG, MCP, tracing | v3+ | [ ] |
-| 8 | FastAPI + Docker + README with results | `api.py`, `Dockerfile`, README (Docker build untested) | [~] |
+| 7 | Research agent: planner/researcher/writer/verifier, LangGraph, evaluation | `research.py`, `research_graph.py`, `eval_research.py` (MCP and tracing not done) | [~] |
+| 8 | FastAPI + Docker + AWS Lambda + CI | `api.py`, `Dockerfile`, `template.yaml`, `docs/DEPLOY.md`, `ci.yml` (written, not built or deployed) | [~] |
 
 Library: scaled from 5 to 59 papers (`data/papers.json`); evaluation re-run, see README.

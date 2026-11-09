@@ -261,3 +261,55 @@ Code: `src/copilot/bm25.py`, `src/copilot/rerank.py`, `eval/compare_retrievers.p
 - Other ANN families: **IVF** (cluster vectors, search only the nearest clusters), **PQ** (compress vectors into short codes), **LSH** (hash similar vectors into the same bucket); real systems combine them.
 - **Vector database** = ANN index + persistence + metadata filtering + CRUD + (often) a server and scaling. FAISS is a library, not a database.
 - Experiment lessons: at 4.6k vectors the database changed nothing (same recall, same latency); HNSW was *slower* than numpy below ~10k vectors. And a benchmark on pure random vectors gave recall 0.02, because random high-dimensional vectors have no neighbor structure: a bad benchmark can mislead as much as a bad system. Check recall before trusting a latency number.
+
+---
+
+## 11. From question answering to a research agent
+
+- **QA vs research task.** A question has one short answer that one retrieval can usually find. A research task ("compare A, B, C, D") needs evidence from several places, a structure, and honesty about gaps. That is where an agent loop earns its cost. Measured: one top-10 retrieval covered 0.49 of the key points; a tool-use loop covered 0.96.
+- **Workflow vs agent.** A *workflow* has code-defined control flow (plan -> research -> write -> verify). An *agent* lets the model choose the next step. Our `staged` pipeline is mostly a workflow with an agent inside each research step; `react` is a plain agent. Start with the simplest that works; add structure only where a measurement says it helps.
+- **Patterns used:** *planner* (split the task into sub-questions), *researcher* (tool-use loop per sub-question), *writer* (compose only from the evidence pool), *critic / verifier* (check each cited sentence against its passages), *repair* (retrieve more evidence for flagged claims, then revise). Related published ideas: ReAct (reason + act interleaved), Reflexion (feedback turned into verbal reflection), Self-RAG (critique tokens).
+- **Grounding rules in the prompt:** cite a passage id for every factual sentence; say explicitly when the library does not cover something. The gap tasks (DPO, Switch/Mixtral routing) test the second rule: all systems passed.
+
+## 12. Evaluating an agent's output
+
+- **Metrics for a long answer** (`eval/eval_research.py`): *citation support* (does the cited passage state the claim), *uncited factual sentences*, *key-point coverage*, *required-paper coverage*, *gap handling*, plus cost, calls, latency. Key points are tied to (paper, phrase) pairs checked against the corpus, so a miss is the system's fault, not an impossible task.
+- **Judge hygiene:** the judge (Sonnet) is a different model from the writer (Haiku). The verifier inside the pipeline is the same family as the writer, so its leniency is a risk; the reported numbers come from the independent judge.
+- **Paired comparison.** Compare systems on the same task and run, and report wins / ties / losses next to the mean difference, so one outlier cannot decide the result. With about 28 pairs, a +0.07 mean with 15 wins and 8 losses is suggestive, not conclusive.
+- **Ablation = remove one component.** `staged` vs `staged_noverify` isolates the verifier; `staged_noverify` vs `react` isolates planning. Result: planning +0.06 support, verifier +0.07 support at about twice the calls; the verifier lowers key-point coverage slightly because deleting an unsupported claim can delete a key point.
+- **Cost-quality frontier.** `react`: $0.003, support 0.76. `staged`: $0.021, support 0.92. Report both; the right choice depends on how costly an unsupported claim is.
+- **Failures are data.** Runs that failed (output truncated, API limit) were recorded with their error, retried, and counted, not silently dropped. When two runs differ only because the token limit changed, say so.
+- **Variance:** repeated runs of the same system on the same tasks differed (react support 0.83 in run 0, 0.70 in run 1). One run is not a result; two runs on the same tasks are still not independent samples.
+
+## 13. LangGraph
+
+- **Core ideas:** a `StateGraph` over a typed `State`; *nodes* are functions that return partial state updates; *edges* define order; *conditional edges* choose the next node from the state (our verify -> repair loop); a *reducer* (`Annotated[list, fn]`) defines how parallel updates merge (our evidence pool); `Send` fans out one task per item (one research branch per sub-question); a *checkpointer* saves state after each step; `interrupt()` pauses the run and `Command(resume=...)` continues it (human approval of the plan).
+- **What it bought here:** same quality (support 0.92 vs 0.92), latency 59 s -> 37 s from parallel research, and a pause/resume point with no extra code. What it did not buy: better answers. The step functions are shared with the hand-written version, so the comparison measures only orchestration.
+- **When a framework is worth it:** branching, parallel fan-out, long-running state that must survive a crash or wait for a human. For a straight loop, the hand-written version (about 30 lines) is clearer. Writing it by hand first is how you know what the framework is doing for you.
+- **Thread-safety gotcha:** parallel nodes run in threads; shared counters need a lock (`Report.add_counts`), and any shared non-thread-safe resource (here, torch inference) needs serialising.
+
+## 14. Production engineering lessons from this stage
+
+- **Concurrency bug found by a test, not by thought.** Four threads calling the encoder and reranker hung for minutes at ~400% CPU. A lock around retrieval fixed it (6 s for the same test). This also affected the first FastAPI version, which ran the agent in a thread pool: two concurrent requests could have hung the server.
+- **Check `stop_reason`.** A response cut at `max_tokens` may contain an incomplete tool call. Raise a clear error that names the step; do not let it surface as a `KeyError`. Then size the limits from real outputs (reports with 5-6 items needed 4,000, not 1,500).
+- **Serialization:** numpy integers are not JSON serializable; cast at the boundary (`int(c)`) rather than patching every `json.dumps`.
+- **Tests that earn their place:** id-stability of the paper manifest (a past bug), citation parsing, API auth and "only return sources that were really retrieved", and that upstream errors become a 502 without leaking internals. Unit tests need no network or key (a placeholder key is set in `conftest.py` because the client is created at import).
+- **Secrets and abuse:** a public URL that spends model credits needs a gate. The API requires an `x-api-key` header (constant-time compare). On AWS the keys live in SSM Parameter Store (SecureString) and are read at cold start, never baked into the image or committed.
+- **Serverless fit:** low, bursty traffic -> Lambda container image behind a Function URL, with the Lambda Web Adapter so the FastAPI app is unchanged; index and models baked into the image so there is no setup or network at runtime; arm64 (cheaper, matches Apple Silicon builds); idle cost near zero. The cost is a cold start of several seconds. An always-on Fargate task would cost more per month than the whole budget.
+- **Observability without a vendor:** one CloudWatch Embedded Metric Format line per request (cost, latency, calls, tokens). Add a traffic alarm and a budget alert.
+- **Within a company on AWS** the usual model access is Amazon Bedrock (traffic and billing stay in the account); the change is the client class.
+- **Operational reality:** the Anthropic account has a monthly API usage limit. Hitting it returns a 400 until the reset date. Budget the evaluation (`judge cost this invocation` is printed), keep results cached so reruns skip finished work, and make failure records distinguishable from results.
+
+## 15. Agent vocabulary (quick reference)
+
+| Term | Meaning |
+|---|---|
+| Tool / function calling | A function the model can request; your code runs it and returns the result (`search_papers`) |
+| Agent loop | Call the model, run any tools it requests, feed results back, stop on a final answer or a step cap |
+| MCP (Model Context Protocol) | A standard way to expose tools and data sources to any compatible application |
+| Skill | A folder with a `SKILL.md` (name + description + instructions, optional scripts) loaded on demand; knowledge about *how* to do a task, not a callable function. Progressive disclosure: only the description is always in context |
+| Subagent / multi-agent | Separate model loops with their own context, used to isolate reading-heavy work or specialise roles |
+| Human-in-the-loop | The run pauses at a checkpoint for a person to approve or edit (our plan approval) |
+| Checkpointing | Saving graph state after each step so a run can resume or be inspected |
+| Self-verification / critic | A step that checks the system's own output against evidence (our citation verifier) |
+| Prompt injection | Retrieved text that tries to give the model instructions; treat retrieved content as data, never as instructions |

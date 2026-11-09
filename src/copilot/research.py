@@ -73,7 +73,7 @@ def llm(rep: Report, system: str, user: str, max_tokens: int = REPORT_MAX_TOKENS
     resp = client.messages.create(model=MODEL, max_tokens=max_tokens, system=system, thinking={"type": "disabled"},
                                   messages=[{"role": "user", "content": user}], **kw)
     if resp.stop_reason == "max_tokens":
-        raise RuntimeError("output truncated")
+        raise RuntimeError(f"output truncated at {max_tokens} tokens in step: {system[:40]!r}")
     rep.add(resp.usage)
     return schema.model_validate_json(text_of(resp)) if schema else text_of(resp)
 
@@ -142,20 +142,20 @@ def verify(r: Retriever, rep: Report, text: str):
     for n, s in enumerate(sents):
         ids = [i for i in cited_ids(s) if i < len(r.idx.chunks)]
         blocks.append(f"({n}) {s}\n   cited passages:\n" + (evidence_block(r, ids) if ids else "   (none)"))
-    chk = llm(rep, VERIFY_SYSTEM, "\n\n".join(blocks), max_tokens=1200, schema=Check)
+    chk = llm(rep, VERIFY_SYSTEM, "\n\n".join(blocks), max_tokens=3000, schema=Check)
     return sents, [i for i in chk.unsupported if 0 <= i < len(sents)], chk.reasons
 
 
 # The steps of the staged pipeline as separate functions: the hand-written orchestration below and the LangGraph version
 # (research_graph.py) both call these, so they differ only in how the steps are wired together.
 def step_plan(rep: Report, task: str) -> list[str]:
-    sub_questions = llm(rep, PLAN_SYSTEM, task, max_tokens=600, schema=Plan).sub_questions
+    sub_questions = llm(rep, PLAN_SYSTEM, task, max_tokens=1500, schema=Plan).sub_questions
     rep.trace.append({"stage": "plan", "sub_questions": sub_questions})
     return sub_questions
 
 
 def step_research(r: Retriever, rep: Report, sub_question: str) -> list[int]:
-    out = run_agent(r, sub_question, max_steps=4)
+    out = run_agent(r, sub_question, max_steps=4, max_tokens=4000)
     rep.add_counts(out.input_tokens, out.output_tokens, out.steps)
     rep.trace.append({"stage": "research", "sub_question": sub_question, "searches": [s["query"] for s in out.searches], "answerable": out.answerable})
     return out.retrieved_ids

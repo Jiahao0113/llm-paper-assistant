@@ -1,33 +1,65 @@
 # LLM Paper Assistant
 
-A question-answering system over a library of 59 arXiv papers on LLMs, RAG, agents, fine-tuning and efficiency (the list is `data/papers.json`). It grows from plain RAG to an agentic RAG loop, and every step is measured with an evaluation harness. Answers carry citations, and the system refuses when the papers do not contain the answer.
+A research agent over a library of 59 arXiv papers on LLMs, RAG, agents, fine-tuning and efficiency (`data/papers.json`). Given a research task such as "compare LoRA, QLoRA, adapters and prefix-tuning", it plans sub-questions, searches the library, writes a cited brief, checks its own citations and repairs the ones the evidence does not support. It says what the library does not cover instead of inventing it.
 
-The point of the project is the measurement as much as the system: what each component buys, and where the evaluation itself is weak.
+The point of the project is the measurement as much as the system: what each component buys, what it costs, and where the evaluation itself is weak. It started as plain RAG and was turned into an agent step by step; every step has numbers and the weak spots are listed under Limitations.
 
 ## Architecture
 
 ```
-PDFs -> ingest (structure-aware chunks, 300 tok, 50 overlap) -> 4,645 chunks (59 papers)
-                                  |
-question -> BM25 (top 100) + dense MiniLM (top 100) -> RRF fusion -> top 30
-         -> cross-encoder rerank -> top 5 -> LLM (Claude Haiku 5.5) -> answer + citations / refusal
-
-Agentic version: the LLM calls search_papers(query, paper?) in a loop (max 6 steps),
-reads the results, may rewrite the query and search again, then calls final_answer.
+                 +---------------- retrieval tool (search_papers) ----------------+
+PDFs -> chunks ->|  BM25 top 100 + dense MiniLM top 100 -> RRF -> cross-encoder -> top 5 |
+(4,645, 59 papers)+------------------------------------------------------------+
+                                           ^
+research task -> plan (3-6 sub-questions) -> research each sub-question (tool-use agent, in parallel in the LangGraph version)
+              -> write cited brief -> verify every cited sentence against its passages
+              -> if unsupported claims: find more evidence, revise (up to 2 rounds) -> brief + sources
 ```
+
+Five ways to produce the same brief are implemented and compared (`src/copilot/research.py`, `research_graph.py`): `single_shot` (one retrieval, one generation), `react` (the tool-use loop asked to write a report), `staged` (the pipeline above), `staged_noverify` (ablation without the verifier) and `graph` (the staged pipeline as a LangGraph `StateGraph`).
 
 | Part | Code |
 |---|---|
 | PDF parsing and chunking (section metadata, appendix handling, table residue filter) | `src/copilot/ingest.py` |
-| Dense retrieval (all-MiniLM-L6-v2, normalized vectors, brute-force cosine) | `src/copilot/retrieval.py` |
-| BM25 (hand-written, k1=1.2, b=0.75) and RRF | `src/copilot/bm25.py` |
-| Cross-encoder reranker (ms-marco-MiniLM-L-6-v2) | `src/copilot/rerank.py` |
-| Hybrid retrieval pipeline | `src/copilot/pipeline.py` |
-| Grounded RAG with structured output | `src/copilot/rag.py` |
-| Agent (hand-written tool-use loop, strict `final_answer` schema) | `src/copilot/agent.py` |
-| Evaluation scripts | `eval/` |
+| Dense retrieval (all-MiniLM-L6-v2) with a numpy or Chroma/HNSW backend, BM25 (hand-written), RRF, cross-encoder reranker | `retrieval.py`, `vectorstore.py`, `bm25.py`, `rerank.py`, `pipeline.py` |
+| Tool-use agent loop (strict `final_answer` schema) | `src/copilot/agent.py` |
+| Research systems and shared step functions | `src/copilot/research.py` |
+| The same pipeline in LangGraph (parallel fan-out, conditional repair loop, human approval of the plan) | `src/copilot/research_graph.py` |
+| FastAPI service (`/ask`, `/research`), API-key gate, CloudWatch metrics line | `src/copilot/api.py` |
+| Fixed RAG baseline | `src/copilot/rag.py` |
+| Evaluation | `eval/` (research briefs: `research_tasks.json`, `eval_research.py`, `analyze_research.py`) |
+| Tests, CI, Lambda deployment | `tests/`, `.github/workflows/ci.yml`, `Dockerfile`, `template.yaml`, `docs/DEPLOY.md` |
 
 ## Results
+
+### Research briefs (the agent task)
+
+15 comparison tasks that need 2-6 papers each, plus 2 "gap" tasks that ask about papers the library does not contain (DPO, Switch Transformer/Mixtral routing). Each key point in a task is tied to a phrase that exists in the corpus, so the task is answerable from the library. A Sonnet 5.5 judge (not the Haiku model that writes the briefs) scores every brief:
+
+- **support**: share of factual sentences whose claim is stated by the passages they cite (higher is better);
+- **uncited**: factual sentences with no citation at all (lower is better);
+- **key points**: share of the task's expected points the brief states; **papers**: share of required papers cited at least once.
+
+| System | Support | Uncited / brief | Key points | Papers | LLM calls | Cost / brief | Time |
+|---|---|---|---|---|---|---|---|
+| `single_shot` (top-10 retrieval, one call) | 0.78 | 3.5 | 0.49 | 0.67 | 1 | $0.001 | 6 s |
+| `react` (tool-use loop) | 0.76 | 5.3 | 0.96 | 1.00 | 2.1 | $0.003 | 9 s |
+| `staged_noverify` (plan -> research -> write) | 0.83 | 3.9 | 0.98 | 1.00 | 11 | $0.011 | 37 s |
+| `staged` (+ verify and repair citations) | **0.92** | **1.6** | 0.94 | 1.00 | 16 | $0.021 | 59 s |
+| `graph` (staged in LangGraph, parallel research) | 0.92 | 1.1 | 0.94 | 1.00 | 16 | $0.022 | **37 s** |
+
+Paired differences (same task and run; wins / ties / losses over about 28 pairs, `eval/analyze_research.py`):
+
+- Searching more than once is what matters most: `react` vs `single_shot` raises key-point coverage by 0.48 (14 wins, 0 losses). A single retrieval cannot cover four or five papers.
+- Planning separate sub-questions adds a little citation support over the plain loop (`staged_noverify` vs `react`: +0.06, 19 wins / 8 losses).
+- The citation verifier adds more (`staged` vs `staged_noverify`: +0.07 support, 15 wins / 8 losses, and 2.0 fewer uncited sentences per brief), at the price of about 2x the calls. It slightly lowers key-point coverage (-0.05, 0 wins / 5 losses): when it deletes an unsupported claim, a key point sometimes goes with it.
+- The `react` loop is the cost-efficient choice if citation rigor does not matter: it reaches the same coverage for 1/8 of the cost of `staged`. `staged` is worth it when unsupported claims are expensive.
+- LangGraph gives the same quality as the hand-written pipeline (support -0.01, within noise) and is 37 s instead of 59 s, because the sub-questions are researched in parallel. It also gives checkpointing and a human-approval step for free: the run pauses after planning, a person edits the sub-questions, and it resumes.
+- On both gap tasks, every system said what was missing in every run and none invented details (acknowledged every time, fabricated 0; 2 tasks x 1-2 runs per system).
+
+How much to trust this: see Limitations. The effects are modest and the sample is small; read these as evidence, not proof.
+
+### Question answering (the earlier RAG stages)
 
 All numbers are small-sample. Read the limitations before quoting them. The project started with five papers (Transformer, RAG, LoRA, QLoRA, ReAct) and the evaluation sets were written for them; I later grew the library to 59 papers and re-ran everything. Tables show both where I have both.
 
@@ -97,6 +129,17 @@ Brute force grows linearly with the number of vectors, HNSW barely moves, at a r
 
 ## Limitations
 
+**Research-brief evaluation**
+- **15 tasks plus 2 gap tasks, written by one author**, and the same tasks are used in both runs, so the paired comparisons are not independent samples. A third run was planned and cut short when the Anthropic account hit its monthly API usage limit; only runs 0 and 1 are used (about 28 pairs per comparison). Failed attempts from that period were removed from the results file.
+- **The judge is one model (Sonnet 5.5) with a strictness I set.** "Unsupported" depends on its reading of the passages; I did not validate it against a human labeller. The verifier inside `staged` is Haiku checking Haiku's own text, which can be lenient or share blind spots; the Sonnet judge is what the table reports.
+- **Sentence splitting is a heuristic.** Sentences under 26 characters are not checked by either the verifier or the judge (pinned by a test). `uncited` counts factual sentences the judge found; the same brief can score differently on a re-judge.
+- **Token limits caused failed runs** (briefs with 5-6 items exceeded 1,500-2,500 output tokens); the limits were raised and the failed runs retried. Runs that completed before the change were not re-run.
+- **Retrieval was not thread-safe.** Concurrent torch calls hung a test, so retrieval is serialised with a lock; the parallel speed-up in the LangGraph version comes from overlapping the model calls, not the retrieval.
+- **Cost is the model API only** (Haiku 5.5 at its list price; judge cost not included). Latency is wall-clock on a laptop with up to 3 briefs running at once.
+- **Deployment is untested.** The Dockerfile, SAM template and CI workflow have not been built or deployed (no Docker or AWS credentials where I wrote them). See `docs/DEPLOY.md`.
+
+**Question-answering stages**
+
 - **Small, biased test sets.** 60 synthetic questions with lexical leakage and 15 hand-written ones written by one person. More questions would not remove that bias.
 - **Small sets, written by one author.** The v3 set has 21 questions; a single question swings a row by 8-20%. The agent was developed against the 20 older questions, not against v3, but v3 is still too small to rank systems with confidence. I replaced one v3 "unanswerable" question after seeing a result, because it was mislabelled (the GQA paper does mention speculative sampling, so the system was right to answer); the replacement was checked against the corpus first.
 - **The agent-versus-RAG comparison is only partly controlled.** On v3 I added a top-10 RAG baseline, which closes most of the gap (see above); the older 20-question comparison still pits the agent against top-5 only. The model also knows these famous papers from pretraining, so results on private documents may differ.
@@ -123,14 +166,20 @@ uv run python -m eval.eval_agent          # agent on the 20 questions, with the 
 uv run python -m eval.ablate_rewrite      # the prompt ablation
 ```
 
-**API.** `uv run uvicorn src.copilot.api:app --port 8000`, then:
+**Tests.** `uv run python -m pytest` (11 unit and API tests, no network or API key needed).
+
+**Research briefs from the command line:** `uv run python -m eval.eval_research staged graph --runs 1` writes `eval/research_results.json`; `uv run python -m eval.analyze_research` prints the tables above without calling any API.
+
+**API.** `uv run uvicorn src.copilot.api:app --port 8000` (set `APP_API_KEY` to require an `x-api-key` header), then:
 
 ```bash
 curl -X POST localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "What number format is used for the frozen weights in QLoRA?"}'
 ```
 
-The response has `answerable`, `answer`, `sources` (only passages that were really retrieved, with paper, section and page), the search queries the agent used, steps and token count.
+`POST /research` with `{"task": "...", "system": "staged"}` returns the brief, its sources, cost, calls and a trace of the steps. Deploying to AWS Lambda is described in `docs/DEPLOY.md`.
+
+The `/ask` response has `answerable`, `answer`, `sources` (only passages that were really retrieved, with paper, section and page), the search queries the agent used, steps and token count.
 
 **Docker** (the image holds the code and dependencies; the index and the key are supplied at run time):
 
