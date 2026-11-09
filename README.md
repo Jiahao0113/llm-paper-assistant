@@ -38,7 +38,7 @@ Five ways to produce the same brief are implemented and compared (`src/copilot/r
 | 2. Reranking | Does a cross-encoder help? | recall@1 improved in all four settings tried | Add the reranker |
 | 3. RAG vs agent for QA | Does the agent beat fixed RAG? | top-5 RAG 9/12, top-10 RAG 11/12, agent 12/12 (n=12): most of the gap was "sees more passages"; clear only for questions needing two papers | Keep the agent for multi-paper work |
 | 4. Scale | Does it hold at 59 papers? | hybrid recall@5 0.93 -> 0.83 with 13x more chunks | Keep hybrid + rerank |
-| 5. Vector database | Is Chroma/HNSW worth it? | identical results at 4.6k vectors; HNSW only wins above ~10k | numpy default, Chroma optional |
+| 5. Vector database | Is Chroma/HNSW worth it? | identical results at 4.6k vectors; HNSW won at 50k and above, lost at 5k | numpy default, Chroma optional |
 | 6. New task: research briefs | Is one retrieval enough? | single retrieval covers 0.48 of the key points; a tool-use loop 0.96 | Agent loop |
 | 7. Planning and verification | What do planner and citation checker add? | planner +0.08 support, checker +0.06 more (CIs below) | `staged` pipeline |
 | 8. Repair rounds | Are two repair rounds needed? | one round is indistinguishable from two, 20% cheaper | Default to one round (chosen after seeing the data, see Limitations) |
@@ -155,13 +155,13 @@ What this says, with n this small (one question is 8% on the single-paper rows, 
 | 50,000 | 0.91 ms | 0.27 ms | 1.000 | 5.7 s |
 | 500,000 | 9.28 ms | 0.26 ms | 0.990 | 66.8 s |
 
-Brute force grows linearly with the number of vectors, HNSW barely moves, at a recall cost that `ef` tunes (ef=20: 0.95 at 500k; ef=200: 1.000 but 0.59 ms). Below roughly 10k vectors, exact search is faster. A first run on purely random vectors gave HNSW recall of 0.02 at 500k: random vectors in 384 dimensions are almost equidistant, which is the worst case for ANN, so those numbers say nothing about text embeddings. The scaling data is synthetic (noise added to real embeddings), not a measurement of real 500k-chunk corpora.
+Brute force grows linearly with the number of vectors, HNSW barely moves, at a recall cost that `ef` tunes (ef=20: 0.95 at 500k; ef=200: 1.000 but 0.59 ms). At 5,000 vectors exact search was faster; HNSW was faster at 50,000 and above (the crossover in between was not measured). A first run on purely random vectors gave HNSW recall of 0.02 at 500k: random vectors in 384 dimensions are almost equidistant, which is the worst case for ANN, so those numbers say nothing about text embeddings. The scaling data is synthetic (noise added to real embeddings), not a measurement of real 500k-chunk corpora.
 
 ## Limitations
 
 **Research-brief evaluation**
 - **15 tasks plus 2 gap tasks, written by one author.** Tasks were fixed before any system was run, but the confidence intervals only cover task-to-task variation, not "other people would write other tasks". Repeated runs of the same tasks are not independent, which the bootstrap over tasks accounts for.
-- **The judge is one model (Sonnet 5.5) with a strictness I set, and it has not been validated against a human yet.** `eval/audit_sheet.py` produces a blinded sample of 30 judged sentences with their cited passages for a person to label, and `eval/audit_score.py` computes agreement and kappa; until those labels exist, treat the absolute numbers as the judge's opinion. Relative comparisons between systems are more trustworthy than the absolute values because the same judge scores all of them.
+- **The judge is one model (Sonnet 5.5) and has not been validated against a person.** I audited it with a blinded sample of 30 judged sentences and their cited passages (`eval/audit_sheet.py`, 15 judged supported and 15 judged unsupported). The labeller was the AI assistant that built this project, **which is the same model as the judge, so the audit is not independent and is not a human audit.** Agreement was 25/30 (83%, Cohen's kappa 0.67); all 5 disagreements were the judge being stricter than the labeller, none the other way, so the reported support rates are more likely under- than over-estimates. The sample is balanced by construction, not representative. A human can fill in `eval/audit/labels.csv` and run `python -m eval.audit_score` to replace this with a real check. Relative comparisons between systems are more trustworthy than absolute values because the same judge scores all of them.
 - **The `support` metric mixes citation coverage and citation accuracy**, and counts uncited connective or "the library does not cover X" sentences as unsupported. Error analysis of a sample of flagged sentences found many uncited summary or limitation sentences that were not wrong. The split above separates the two, but only for reports that stored per-sentence verdicts.
 - **`staged_r1` was chosen after seeing the data.** Comparing one and two repair rounds on the same 15 tasks, then making one round the default, is selection on the evaluation set. The difference was not significant either way; the cost saving is the reason for the choice.
 - **The in-pipeline verifier over-flags** (see above) and is the same model family as the writer, so its flags are weak evidence; the reported numbers come from the independent judge.
@@ -222,5 +222,7 @@ docker run -p 8000:8000 --env-file .env -v "$PWD/data:/app/data" paper-assistant
 ```
 
 ## How it was built
+
+A factual summary of what was and was not done (claims, evidence, caveats) is in `docs/PROJECT_FACTS.md`.
 
 Step by step, with notes on each concept (BPE, sampling, tool use, embeddings, chunking, BM25, reranking, LLM-as-judge, agents) in `notes/NOTES.md` and the plan in `ROADMAP.md`.
