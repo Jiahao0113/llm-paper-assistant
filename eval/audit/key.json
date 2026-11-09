@@ -1,0 +1,212 @@
+[
+ {
+  "item": 1,
+  "judge_supported": false,
+  "system": "single_shot",
+  "task": "t03",
+  "run": 2
+ },
+ {
+  "item": 2,
+  "judge_supported": true,
+  "system": "graph",
+  "task": "t01",
+  "run": 1
+ },
+ {
+  "item": 3,
+  "judge_supported": true,
+  "system": "staged_r1",
+  "task": "t04",
+  "run": 1
+ },
+ {
+  "item": 4,
+  "judge_supported": false,
+  "system": "staged_r1",
+  "task": "t07",
+  "run": 1
+ },
+ {
+  "item": 5,
+  "judge_supported": false,
+  "system": "single_shot",
+  "task": "t12",
+  "run": 1
+ },
+ {
+  "item": 6,
+  "judge_supported": true,
+  "system": "staged_r1",
+  "task": "t11",
+  "run": 1
+ },
+ {
+  "item": 7,
+  "judge_supported": true,
+  "system": "graph",
+  "task": "t02",
+  "run": 1
+ },
+ {
+  "item": 8,
+  "judge_supported": true,
+  "system": "staged",
+  "task": "t04",
+  "run": 2
+ },
+ {
+  "item": 9,
+  "judge_supported": true,
+  "system": "graph",
+  "task": "t05",
+  "run": 2
+ },
+ {
+  "item": 10,
+  "judge_supported": false,
+  "system": "single_shot",
+  "task": "t01",
+  "run": 1
+ },
+ {
+  "item": 11,
+  "judge_supported": false,
+  "system": "react",
+  "task": "t04",
+  "run": 2
+ },
+ {
+  "item": 12,
+  "judge_supported": true,
+  "system": "staged_noverify",
+  "task": "t04",
+  "run": 2
+ },
+ {
+  "item": 13,
+  "judge_supported": false,
+  "system": "staged_noverify",
+  "task": "t09",
+  "run": 2
+ },
+ {
+  "item": 14,
+  "judge_supported": false,
+  "system": "staged_r1",
+  "task": "t08",
+  "run": 1
+ },
+ {
+  "item": 15,
+  "judge_supported": true,
+  "system": "graph",
+  "task": "t07",
+  "run": 1
+ },
+ {
+  "item": 16,
+  "judge_supported": true,
+  "system": "single_shot",
+  "task": "t13",
+  "run": 1
+ },
+ {
+  "item": 17,
+  "judge_supported": true,
+  "system": "staged_noverify",
+  "task": "t13",
+  "run": 2
+ },
+ {
+  "item": 18,
+  "judge_supported": true,
+  "system": "staged_r1",
+  "task": "t04",
+  "run": 0
+ },
+ {
+  "item": 19,
+  "judge_supported": false,
+  "system": "graph",
+  "task": "t15",
+  "run": 1
+ },
+ {
+  "item": 20,
+  "judge_supported": false,
+  "system": "single_shot",
+  "task": "t04",
+  "run": 1
+ },
+ {
+  "item": 21,
+  "judge_supported": false,
+  "system": "react",
+  "task": "t04",
+  "run": 2
+ },
+ {
+  "item": 22,
+  "judge_supported": false,
+  "system": "staged_noverify",
+  "task": "g01",
+  "run": 2
+ },
+ {
+  "item": 23,
+  "judge_supported": false,
+  "system": "graph",
+  "task": "t04",
+  "run": 1
+ },
+ {
+  "item": 24,
+  "judge_supported": true,
+  "system": "staged_noverify",
+  "task": "t06",
+  "run": 2
+ },
+ {
+  "item": 25,
+  "judge_supported": false,
+  "system": "react",
+  "task": "t06",
+  "run": 2
+ },
+ {
+  "item": 26,
+  "judge_supported": false,
+  "system": "staged_r1",
+  "task": "t01",
+  "run": 1
+ },
+ {
+  "item": 27,
+  "judge_supported": true,
+  "system": "staged_noverify",
+  "task": "t10",
+  "run": 2
+ },
+ {
+  "item": 28,
+  "judge_supported": true,
+  "system": "staged",
+  "task": "t07",
+  "run": 2
+ },
+ {
+  "item": 29,
+  "judge_supported": false,
+  "system": "staged",
+  "task": "t12",
+  "run": 2
+ },
+ {
+  "item": 30,
+  "judge_supported": true,
+  "system": "react",
+  "task": "t15",
+  "run": 2
+ }
+]

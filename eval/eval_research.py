@@ -9,7 +9,7 @@ Usage: python -m eval.eval_research [system ...] [--runs N]; results accumulate 
 import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import anthropic
@@ -73,7 +73,9 @@ def score(r: Retriever, task: dict, text: str) -> dict:
     all_ids = cited_ids(text)
     out = {"n_sentences": len(sents), "n_factual": len(factual), "support": len(supported) / len(factual) if factual else None,
            "uncited": sum(1 for i in factual if not cited_ids(sents[i])), "bad_cites": sum(1 for i in all_ids if i >= n_chunks),
-           "unsupported_sentences": [sents[i] for i in factual if i not in supported]}
+           "unsupported_sentences": [sents[i] for i in factual if i not in supported],
+           # every factual sentence with the judge's verdict: the raw material for the human audit (eval/audit_sheet.py)
+           "sentence_verdicts": [{"text": sents[i], "cited": [c for c in cited_ids(sents[i]) if c < n_chunks], "supported": i in supported} for i in sorted(factual)]}
     kps = task["key_points"]
     if kps:
         listing = "\n".join(f"({n}) {k['point']}" for n, k in enumerate(kps))
@@ -115,8 +117,8 @@ def main():
                 "seconds": rep.seconds, "input_tokens": rep.input_tokens, "output_tokens": rep.output_tokens, "trace": rep.trace, **sc}
 
     with ThreadPoolExecutor(WORKERS) as ex:
-        for res in ex.map(job, jobs):
-            results.append(res)
+        for fut in as_completed([ex.submit(job, j) for j in jobs]):  # save each report as soon as it finishes
+            results.append(fut.result())
             OUT.write_text(json.dumps(results, indent=1, ensure_ascii=False, default=int))
     print(f"judge cost this invocation: ${calls['in'] * PRICE_IN + calls['out'] * PRICE_OUT:.2f}")
     summarize(results)

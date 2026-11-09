@@ -20,7 +20,7 @@ def client(monkeypatch):
         # cites c1 (retrieved), c3 (never retrieved: must not come back as a source) and c99 (does not exist)
         return Report(text="A claim [c1]. Another claim [c3][c99].", system="fake", retrieved_ids=[0, 1, 2], input_tokens=1000, output_tokens=100, llm_calls=2)
 
-    monkeypatch.setitem(api.SYSTEMS, "staged", fake_system)
+    monkeypatch.setitem(api.SYSTEMS, "staged_r1", fake_system)  # the default system
     return TestClient(api.app)  # no `with`: the lifespan (which loads the real models) is skipped
 
 
@@ -48,6 +48,6 @@ def test_upstream_failure_becomes_502_not_a_stack_trace(client, monkeypatch):
     def boom(r, task):
         raise RuntimeError("secret internals")
 
-    monkeypatch.setitem(api.SYSTEMS, "staged", boom)
+    monkeypatch.setitem(api.SYSTEMS, "staged_r1", boom)
     resp = client.post("/research", json=TASK, headers={"x-api-key": "secret"})
     assert resp.status_code == 502 and "secret internals" not in resp.text

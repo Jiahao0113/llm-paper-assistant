@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field  # noqa: E402
 
 from .agent import run_agent  # noqa: E402
 from .pipeline import Retriever  # noqa: E402
-from .research import SYSTEMS, cited_ids  # noqa: E402
+from .research import cited_ids  # noqa: E402
+from .systems import SYSTEMS  # noqa: E402
 
 state: dict = {}
 
@@ -43,7 +44,8 @@ class AskRequest(BaseModel):
 
 class ResearchRequest(BaseModel):
     task: str = Field(min_length=10, max_length=1500)
-    system: Literal["single_shot", "react", "staged"] = "staged"
+    # staged_r1 is the default: one repair round matched two in the evaluation at about 20% lower cost
+    system: Literal["single_shot", "react", "staged_r1", "staged", "graph"] = "staged_r1"
 
 
 class Source(BaseModel):
