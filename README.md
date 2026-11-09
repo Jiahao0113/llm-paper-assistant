@@ -29,6 +29,7 @@ Five ways to produce the same brief are implemented and compared (`src/copilot/r
 | Fixed RAG baseline | `src/copilot/rag.py` |
 | Evaluation | `eval/` (research briefs: `research_tasks.json`, `eval_research.py`, `analyze_research.py`) |
 | Tests, CI, Lambda deployment | `tests/`, `.github/workflows/ci.yml`, `Dockerfile`, `template.yaml`, `docs/DEPLOY.md` |
+| Optional SageMaker serverless endpoint for the embedder and reranker (written and tested locally, not deployed) | `sagemaker/`, `src/copilot/remote.py`, `docs/SAGEMAKER.md` |
 
 ## How the design followed the measurements
 

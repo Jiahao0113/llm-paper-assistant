@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 
 from .ingest import Chunk, chunk_paper
 from .papers import load_papers
+from .remote import RemoteModels, endpoint_name
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 CACHE = Path("data/index")
@@ -14,7 +15,8 @@ CACHE = Path("data/index")
 
 class DenseIndex:
     def __init__(self):
-        self.model = SentenceTransformer(MODEL_NAME)
+        endpoint = endpoint_name()  # SAGEMAKER_ENDPOINT set -> embed through the SageMaker endpoint instead of loading the model here
+        self.model = RemoteModels(endpoint) if endpoint else SentenceTransformer(MODEL_NAME)
         self.chunks: list[Chunk] = []
         self.matrix: np.ndarray | None = None
 

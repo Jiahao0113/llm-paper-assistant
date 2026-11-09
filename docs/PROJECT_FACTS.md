@@ -47,7 +47,8 @@ Small test sets written by one person; one LLM judge; the judge's strictness is 
 
 - **Not deployed to AWS.** A Dockerfile, a SAM/CloudFormation template and a CI workflow were written, and dependency resolution for Linux was checked, but the image has not been built locally and nothing has been deployed. Whether CI builds the image successfully is unknown until it has run on GitHub.
 - **No human validation of the LLM judge.** A 30-sentence audit was done by an AI model that is the same model as the judge; it is not independent and not human. The human audit tooling exists but has no human labels.
-- No SageMaker, no model training or fine-tuning, no GPU work, no Kubernetes, no knowledge graph, no streaming/Kafka, no MCP server, no distributed tracing.
+- **SageMaker: prepared, not run.** A custom inference container for the embedding and reranking models (SageMaker container contract), a client, deploy/teardown scripts for a serverless endpoint and a measurement script exist; with the real models in the container on a laptop the results were identical to the local models. It has not been built with Docker or deployed. (If the owner later runs `docs/SAGEMAKER.md` and records results there, update this line.)
+- No model training or fine-tuning, no GPU work, no Kubernetes, no knowledge graph, no streaming/Kafka, no MCP server, no distributed tracing.
 - No production usage, users, scale or SLAs. Latency and cost figures are from a laptop and the model API list prices.
 - The test sets are small (15 research tasks, 21 older QA questions, 60 synthetic retrieval questions). The statistical statements above hold for these tasks only.
 - Claude API access was used directly, not Amazon Bedrock.
@@ -72,4 +73,5 @@ Small test sets written by one person; one LLM judge; the judge's strictness is 
 | Python, FastAPI, testing, version control | Done |
 | Docker, CI/CD | Written, not verified end to end |
 | AWS (Lambda, SSM, CloudWatch, SAM) | Prepared, not deployed |
-| SageMaker, MLOps, Kubernetes, knowledge graphs, Kafka | Not done |
+| SageMaker | Serving container + client + scripts prepared and tested locally; not deployed |
+| MLOps pipelines, Kubernetes, knowledge graphs, Kafka | Not done |
