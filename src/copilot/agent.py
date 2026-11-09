@@ -66,20 +66,23 @@ class AgentResult:
     retrieved_ids: list[int] = field(default_factory=list)
     steps: int = 0
     input_tokens: int = 0
+    output_tokens: int = 0
     hit_step_limit: bool = False
 
 
-def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS) -> AgentResult:
+def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS, system: str | None = None) -> AgentResult:
+    system = system or SYSTEM
     messages = [{"role": "user", "content": question}]
     res = AgentResult(False, "", [])
     for step in range(1, max_steps + 1):
         resp = client.messages.create(
-            model=MODEL, max_tokens=MAX_TOKENS, system=SYSTEM, tools=TOOLS, messages=messages,
+            model=MODEL, max_tokens=MAX_TOKENS, system=system, tools=TOOLS, messages=messages,
             thinking={"type": "disabled"},
         )
         if resp.stop_reason == "max_tokens":  # a truncated tool call has an incomplete input: fail loudly, not with a KeyError
             raise RuntimeError(f"agent output truncated at {MAX_TOKENS} tokens (step {step})")
         res.steps, res.input_tokens = step, res.input_tokens + resp.usage.input_tokens
+        res.output_tokens += resp.usage.output_tokens
         messages.append({"role": "assistant", "content": resp.content})
         calls = [b for b in resp.content if b.type == "tool_use"]
         if not calls:  # model answered in plain text without the tool: treat as a final answer
@@ -102,8 +105,10 @@ def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS) -
     # Step limit reached: force a final answer from what we have.
     res.hit_step_limit = True
     messages.append({"role": "user", "content": "Step limit reached. Call final_answer now with what you have."})
-    resp = client.messages.create(model=MODEL, max_tokens=MAX_TOKENS, system=SYSTEM, tools=TOOLS, messages=messages,
+    resp = client.messages.create(model=MODEL, max_tokens=MAX_TOKENS, system=system, tools=TOOLS, messages=messages,
                                   tool_choice={"type": "tool", "name": "final_answer"}, thinking={"type": "disabled"})
+    res.input_tokens += resp.usage.input_tokens
+    res.output_tokens += resp.usage.output_tokens
     for b in resp.content:
         if b.type == "tool_use":
             res.answerable, res.answer, res.citations = b.input["answerable"], b.input["answer"], b.input.get("citations", [])
