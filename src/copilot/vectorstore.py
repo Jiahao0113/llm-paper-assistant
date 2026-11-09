@@ -1,5 +1,4 @@
 """Dense search through a vector database (Chroma, HNSW index) instead of numpy brute force."""
-import chromadb
 import numpy as np
 
 PATH = "chroma_db"  # gitignored
@@ -8,6 +7,8 @@ NAME = "chunks"
 
 class ChromaDense:
     def __init__(self, path: str = PATH):
+        import chromadb  # optional backend: imported here so the deployment image does not need it
+
         self.client = chromadb.PersistentClient(path=path)
 
     def build(self, matrix: np.ndarray, chunks, batch: int = 1000):

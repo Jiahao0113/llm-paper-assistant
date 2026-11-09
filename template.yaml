@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: LLM Paper Assistant - FastAPI in a Lambda container image behind a Function URL (pay per request, nothing running while idle).
+
+Parameters:
+  SsmPrefix:
+    Type: String
+    Default: /paper-assistant
+    Description: SSM Parameter Store prefix holding anthropic_api_key and app_api_key (SecureString), created beforehand.
+  AlertEmail:
+    Type: String
+    Description: Where budget and traffic alerts are sent.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 10
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+    Properties:
+      PackageType: Image
+      Architectures: [arm64]   # match the architecture you build on (Apple Silicon = arm64); also ~20% cheaper
+      MemorySize: 4096         # torch + two models; Lambda gives CPU in proportion to memory
+      Timeout: 300             # a staged research brief takes ~1 minute
+      Environment:
+        Variables:
+          SSM_PREFIX: !Ref SsmPrefix
+          AWS_LWA_PORT: '8000'
+          AWS_LWA_READINESS_CHECK_PATH: /health
+          HF_HUB_OFFLINE: '1'
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub
+              - '${Trimmed}/*'
+              - Trimmed: !Select [1, !Split ['/', !Ref SsmPrefix]]
+      FunctionUrlConfig:
+        AuthType: NONE         # the app checks the x-api-key header itself (see src/copilot/api.py)
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ApiFunction}
+      RetentionInDays: 14
+
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref AlertEmail
+
+  TrafficAlarm:   # a public URL that spends model credits: tell me if it suddenly gets busy
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: More than 200 invocations in a day
+      Namespace: AWS/Lambda
+      MetricName: Invocations
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 86400
+      EvaluationPeriods: 1
+      Threshold: 200
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref MonthlyBudgetUsd
+          Unit: USD
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlertEmail
+
+Outputs:
+  FunctionUrl:
+    Value: !GetAtt ApiFunctionUrl.FunctionUrl

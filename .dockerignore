@@ -1,8 +1,13 @@
 .venv
 .env
 .git
-data
+.github
+__pycache__
+chroma_db
+data/raw
+data/index
 eval
 notes
+tests
 step*
-__pycache__
+docs

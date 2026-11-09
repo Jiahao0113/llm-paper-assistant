@@ -5,6 +5,7 @@
 All return a Report with the text, what was cited, token usage and a trace of the steps taken."""
 import json
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 
@@ -14,6 +15,7 @@ from .agent import PAPERS, client, run_agent
 from .pipeline import Retriever
 
 MODEL = "claude-haiku-5-5"
+REPORT_MAX_TOKENS = 4000  # 1500 truncated 3 of 17 staged briefs on tasks with 5-6 items
 PRICE_IN, PRICE_OUT = 0.10 / 1e6, 0.50 / 1e6  # USD per token, Haiku 5.5 (prompts up to 100K tokens)
 
 REPORT_RULES = """Write a short research brief that answers the task.
@@ -35,15 +37,20 @@ class Report:
     llm_calls: int = 0
     seconds: float = 0.0
     trace: list[dict] = field(default_factory=list)
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)  # parallel graph branches update the counters
 
     @property
     def cost(self) -> float:
         return self.input_tokens * PRICE_IN + self.output_tokens * PRICE_OUT
 
+    def add_counts(self, input_tokens: int, output_tokens: int, calls: int):
+        with self._lock:
+            self.input_tokens += input_tokens
+            self.output_tokens += output_tokens
+            self.llm_calls += calls
+
     def add(self, usage):
-        self.input_tokens += usage.input_tokens
-        self.output_tokens += usage.output_tokens
-        self.llm_calls += 1
+        self.add_counts(usage.input_tokens, usage.output_tokens, 1)
 
 
 def cited_ids(text: str) -> list[int]:
@@ -61,7 +68,7 @@ def text_of(resp) -> str:
     return "".join(b.text for b in resp.content if b.type == "text")
 
 
-def llm(rep: Report, system: str, user: str, max_tokens: int = 1500, schema: type[BaseModel] | None = None):
+def llm(rep: Report, system: str, user: str, max_tokens: int = REPORT_MAX_TOKENS, schema: type[BaseModel] | None = None):
     kw = {"output_config": {"format": {"type": "json_schema", "schema": schema.model_json_schema()}}} if schema else {}
     resp = client.messages.create(model=MODEL, max_tokens=max_tokens, system=system, thinking={"type": "disabled"},
                                   messages=[{"role": "user", "content": user}], **kw)
@@ -95,7 +102,7 @@ If the task cannot be answered from the library, call final_answer with answerab
 
 def react_report(r: Retriever, task: str) -> Report:
     t0, rep = time.time(), Report("", "react")
-    out = run_agent(r, task, max_steps=10, system=REACT_SYSTEM)
+    out = run_agent(r, task, max_steps=10, system=REACT_SYSTEM, max_tokens=6000)  # a report is long; 2500 truncated one in testing
     rep.text, rep.retrieved_ids = out.answer, out.retrieved_ids
     rep.input_tokens, rep.output_tokens, rep.llm_calls = out.input_tokens, out.output_tokens, out.steps
     rep.trace = [{"stage": "search", **s} for s in out.searches]
@@ -139,37 +146,71 @@ def verify(r: Retriever, rep: Report, text: str):
     return sents, [i for i in chk.unsupported if 0 <= i < len(sents)], chk.reasons
 
 
+# The steps of the staged pipeline as separate functions: the hand-written orchestration below and the LangGraph version
+# (research_graph.py) both call these, so they differ only in how the steps are wired together.
+def step_plan(rep: Report, task: str) -> list[str]:
+    sub_questions = llm(rep, PLAN_SYSTEM, task, max_tokens=600, schema=Plan).sub_questions
+    rep.trace.append({"stage": "plan", "sub_questions": sub_questions})
+    return sub_questions
+
+
+def step_research(r: Retriever, rep: Report, sub_question: str) -> list[int]:
+    out = run_agent(r, sub_question, max_steps=4)
+    rep.add_counts(out.input_tokens, out.output_tokens, out.steps)
+    rep.trace.append({"stage": "research", "sub_question": sub_question, "searches": [s["query"] for s in out.searches], "answerable": out.answerable})
+    return out.retrieved_ids
+
+
+def step_write(r: Retriever, rep: Report, task: str, pool: list[int]) -> str:
+    return llm(rep, WRITE_SYSTEM, f"Evidence passages:\n\n{evidence_block(r, pool)}\n\nTask: {task}", max_tokens=REPORT_MAX_TOKENS)
+
+
+def step_verify(r: Retriever, rep: Report, text: str, attempt: int = 0):
+    sents, bad, _ = verify(r, rep, text)
+    rep.trace.append({"stage": "verify", "attempt": attempt, "sentences": len(sents), "unsupported": len(bad)})
+    return sents, bad
+
+
+def step_repair(r: Retriever, rep: Report, task: str, pool: list[int], text: str, sents: list[str], bad: list[int], attempt: int = 0):
+    """Find evidence for each flagged claim, then revise the brief. Returns (new text, extended pool)."""
+    extra = []
+    for i in bad:
+        for c in r.retrieve_ids(re.sub(r"\[c\d+\]", "", sents[i]), k=3):
+            if c not in pool and c not in extra:
+                extra.append(c)
+    pool = pool + extra
+    flagged = "\n".join(f"- {sents[i]}" for i in bad)
+    text = llm(rep, WRITE_SYSTEM,
+               f"Evidence passages:\n\n{evidence_block(r, pool)}\n\nTask: {task}\n\nDraft brief:\n{text}\n\n"
+               f"A checker found these sentences unsupported by their citations:\n{flagged}\n\n"
+               "Revise the brief: fix each flagged claim using the evidence, or delete it / say the library does not cover it. Keep supported content. Output the full revised brief.", max_tokens=REPORT_MAX_TOKENS)
+    rep.trace.append({"stage": "repair", "attempt": attempt, "extra_evidence": extra})
+    return text, pool
+
+
 def staged(r: Retriever, task: str, max_repairs: int = 2) -> Report:
     t0, rep = time.time(), Report("", "staged")
-    plan = llm(rep, PLAN_SYSTEM, task, max_tokens=600, schema=Plan)
-    rep.trace.append({"stage": "plan", "sub_questions": plan.sub_questions})
     pool: list[int] = []
-    for sq in plan.sub_questions:
-        out = run_agent(r, sq, max_steps=4)
-        rep.input_tokens += out.input_tokens
-        rep.output_tokens += out.output_tokens
-        rep.llm_calls += out.steps
-        pool += [i for i in out.retrieved_ids if i not in pool]
-        rep.trace.append({"stage": "research", "sub_question": sq, "searches": [s["query"] for s in out.searches], "answerable": out.answerable})
-    text = llm(rep, WRITE_SYSTEM, f"Evidence passages:\n\n{evidence_block(r, pool)}\n\nTask: {task}", max_tokens=1500)
+    for sq in step_plan(rep, task):
+        pool += [i for i in step_research(r, rep, sq) if i not in pool]
+    text = step_write(r, rep, task, pool)
     for attempt in range(max_repairs + 1):
-        sents, bad, reasons = verify(r, rep, text)
-        rep.trace.append({"stage": "verify", "attempt": attempt, "sentences": len(sents), "unsupported": len(bad)})
+        sents, bad = step_verify(r, rep, text, attempt)
         if not bad or attempt == max_repairs:
             break
-        extra = []  # look for evidence for each flagged claim, then revise
-        for i in bad:
-            for c in r.retrieve_ids(re.sub(r"\[c\d+\]", "", sents[i]), k=3):
-                if c not in pool and c not in extra:
-                    extra.append(c)
-        pool += extra
-        flagged = "\n".join(f"- {sents[i]}" for i in bad)
-        text = llm(rep, WRITE_SYSTEM,
-                   f"Evidence passages:\n\n{evidence_block(r, pool)}\n\nTask: {task}\n\nDraft brief:\n{text}\n\n"
-                   f"A checker found these sentences unsupported by their citations:\n{flagged}\n\n"
-                   "Revise the brief: fix each flagged claim using the evidence, or delete it / say the library does not cover it. Keep supported content. Output the full revised brief.", max_tokens=1500)
-        rep.trace.append({"stage": "repair", "attempt": attempt, "extra_evidence": extra})
+        text, pool = step_repair(r, rep, task, pool, text, sents, bad, attempt)
     rep.text, rep.retrieved_ids = text, pool
+    rep.seconds = time.time() - t0
+    return rep
+
+
+def staged_noverify(r: Retriever, task: str) -> Report:
+    """Ablation: the same plan -> research -> write, with no citation verification or repair."""
+    t0, rep = time.time(), Report("", "staged_noverify")
+    pool: list[int] = []
+    for sq in step_plan(rep, task):
+        pool += [i for i in step_research(r, rep, sq) if i not in pool]
+    rep.text, rep.retrieved_ids = step_write(r, rep, task, pool), pool
     rep.seconds = time.time() - t0
     return rep
 

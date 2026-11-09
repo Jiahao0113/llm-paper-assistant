@@ -70,17 +70,18 @@ class AgentResult:
     hit_step_limit: bool = False
 
 
-def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS, system: str | None = None) -> AgentResult:
+def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS, system: str | None = None,
+              max_tokens: int = MAX_TOKENS) -> AgentResult:
     system = system or SYSTEM
     messages = [{"role": "user", "content": question}]
     res = AgentResult(False, "", [])
     for step in range(1, max_steps + 1):
         resp = client.messages.create(
-            model=MODEL, max_tokens=MAX_TOKENS, system=system, tools=TOOLS, messages=messages,
+            model=MODEL, max_tokens=max_tokens, system=system, tools=TOOLS, messages=messages,
             thinking={"type": "disabled"},
         )
         if resp.stop_reason == "max_tokens":  # a truncated tool call has an incomplete input: fail loudly, not with a KeyError
-            raise RuntimeError(f"agent output truncated at {MAX_TOKENS} tokens (step {step})")
+            raise RuntimeError(f"agent output truncated at {max_tokens} tokens (step {step})")
         res.steps, res.input_tokens = step, res.input_tokens + resp.usage.input_tokens
         res.output_tokens += resp.usage.output_tokens
         messages.append({"role": "assistant", "content": resp.content})
@@ -105,7 +106,7 @@ def run_agent(retriever: Retriever, question: str, max_steps: int = MAX_STEPS, s
     # Step limit reached: force a final answer from what we have.
     res.hit_step_limit = True
     messages.append({"role": "user", "content": "Step limit reached. Call final_answer now with what you have."})
-    resp = client.messages.create(model=MODEL, max_tokens=MAX_TOKENS, system=system, tools=TOOLS, messages=messages,
+    resp = client.messages.create(model=MODEL, max_tokens=max_tokens, system=system, tools=TOOLS, messages=messages,
                                   tool_choice={"type": "tool", "name": "final_answer"}, thinking={"type": "disabled"})
     res.input_tokens += resp.usage.input_tokens
     res.output_tokens += resp.usage.output_tokens
